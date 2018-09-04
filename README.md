@@ -63,3 +63,17 @@ If your changes are substantial you can also run our extensive end-to-end testin
 ```
 
 For power users who want to make sure the binary works, you can run `sh scripts/package.sh true`. You'll need to download the usual [node-gyp](https://github.com/nodejs/node-gyp) build environment for this to work and we only support the latest LTS version to compile. This step is usually not needed though unless your modifying resource files or changing dependencies.
+
+
+# Briteback
+
+At Briteback we use Deepstream and will be aiming at fixing and improving
+Deepstream with some fixes and suggestions we have found might be useful.
+
+## Fixes
+
+[] fix bottleneck on client with with "ack registry"
+[] fix crashes on closed sockets
+[] fix socket leaks
+[] fix records hanging and not sending update events for subscriptions
+[] fix clients not able to reconnect after server restart
