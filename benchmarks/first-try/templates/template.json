@@ -1,0 +1,17 @@
+{
+    "description": [
+        "A single user will emit an event every second",
+        "A second user will subscribe to the event and print 'Hello, World!'"
+    ],
+    "perf-emitter": {
+        "type": "single-user-event-emitter",
+        "frequency": "1 each second",
+        "event": "foo",
+        "data": "Hello, World!"
+    },
+    "perf-subscriber": {
+        "type": "single-user-subscriber",
+        "event": "foo",
+        "on-event": "print-data"
+    }
+}

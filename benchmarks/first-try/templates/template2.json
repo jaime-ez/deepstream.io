@@ -1,0 +1,21 @@
+{
+    "description": [
+        "Several users emit a lot of data at the same time.",
+        "A single subscriber will switch from connected and unconnected every minute."
+    ],
+    "perf-emitter": {
+        "type": "parallel-users-emit",
+        "users": 10,
+        "event": "foo",
+        "data": {
+            "just": "some data"
+        },
+        "frequency": "1 per millisecond"
+    },
+    "perf-subscriber": {
+        "type": "on-and-off-subscriber",
+        "event": "foo",
+        "on-event": "discard",
+        "frequency": "1 per second"
+    }
+}
