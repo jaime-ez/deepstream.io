@@ -17,11 +17,16 @@ function getPerformanceObjects(data: any): Array<any> {
   return perfKeys.map(convertObject)
 }
 
+function getOptions(data: any): object {
+  return data.options || {}
+}
+
 export function parse(fpath: string) {
   const data = JSON.parse(fs.readFileSync(fpath, { encoding: 'utf-8'} ))
 
   return {
     runners: getPerformanceObjects(data),
-    description: getDescription(data)
+    description: getDescription(data),
+    options: getOptions(data)
   }
 }

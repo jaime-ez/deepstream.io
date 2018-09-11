@@ -7,10 +7,20 @@ function convertFrequency(freq: string): number {
 const debugMode = process.env.RUNNERS_DEBUG_MODE || false
 
 type LoggingFunction = (s: string) => void
+
+export interface PerformanceReport {
+  describe(logger: LoggingFunction): void
+}
+
 export interface PerformanceRunner {
-  runPerformance(): void
-  getRecordedData(): any
+  runPerformance(dsClient: object, options: object): Promise<PerformanceReport>
   describeRunner(logger: LoggingFunction): void
+}
+
+function makeSimpleReport(what: string): PerformanceReport {
+  return {
+    describe: (logger: LoggingFunction) => logger(what)
+  }
 }
 
 function logData<T>(logger: LoggingFunction, data: any | Array<T>, key: string = '', prefix: string = ''): void {
@@ -43,12 +53,8 @@ export class SingleUserEventEmitter implements PerformanceRunner {
     this.data = o.data
   }
 
-  public runPerformance() {
-    console.log('single user emit')
-  }
-
-  public getRecordedData() {
-
+  public async runPerformance(dsClient: object, options: object) {
+    return makeSimpleReport('Done!')
   }
 
   public describeRunner(logger: LoggingFunction) {
@@ -75,12 +81,8 @@ export class SingleUserSubscriber implements PerformanceRunner {
     this.onEventName = o['on-event']
   }
 
-  public runPerformance() {
-    console.log('single user sub')
-  }
-
-  public getRecordedData() {
-
+  public async runPerformance(dsClient: object, options: object) {
+    return makeSimpleReport('Single user subscriber result')
   }
 
   public describeRunner(logger: LoggingFunction) {
@@ -110,12 +112,8 @@ export class ParallelUsersEmit implements PerformanceRunner {
     this.data = o.data
   }
 
-  public runPerformance() {
-    console.log('parallel user emit')
-  }
-
-  public getRecordedData() {
-
+  public async runPerformance(dsClient: object, options: object) {
+    return makeSimpleReport('parallel')
   }
 
   public describeRunner(logger: LoggingFunction) {
@@ -145,12 +143,8 @@ export class OnAndOffSubscriber implements PerformanceRunner {
     this.frequencyInMs = convertFrequency(o.frequency)
   }
 
-  public runPerformance() {
-    console.log('on off sub')
-  }
-
-  public getRecordedData() {
-
+  public async runPerformance(dsClient: object, options: object) {
+    return makeSimpleReport('on off')
   }
 
   public describeRunner(logger: LoggingFunction) {
@@ -171,9 +165,14 @@ export class OnAndOffSubscriber implements PerformanceRunner {
 export class EmptyRunner implements PerformanceRunner {
   // TODO: Throw anywhere here?
   constructor(o: any) {}
-  public runPerformance() { console.log('empty') }
-  public getRecordedData() {}
-  public describeRunner(logger: LoggingFunction) { logger('Empty') }
+
+  public async runPerformance(dsClient: object, options: object) {
+    return makeSimpleReport('empty')
+  }
+
+  public describeRunner(logger: LoggingFunction) {
+    logger('Empty')
+  }
 }
 
 export function createRunner(o: any): PerformanceRunner {
