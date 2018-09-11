@@ -10,12 +10,31 @@
         "data": {
             "just": "some data"
         },
-        "frequency": "1 per millisecond"
+        "frequency": "1 per second"
     },
     "perf-subscriber": {
         "type": "on-and-off-subscriber",
         "event": "foo",
         "on-event": "discard",
         "frequency": "1 per second"
+    },
+    "options": {
+        "host": "ws://127.0.0.1:8000",
+        "authParams": {
+            "server": "test"
+        },
+        "clientOptions": {
+            "maxReconnectAttempts": 10000000,
+            "reconnectIntervalIncrement": 100,
+            "rpcAckTimeout": 20000,
+            "rpcResponseTimeout": 20000,
+            "subscriptionTimeout": 20000,
+            "recordReadAckTimeout": 20000,
+            "recordReadTimeout": 20000,
+            "recordDeleteTimeout": 20000,
+            "heartbeatInterval": 10000,
+            "maxReconnectInterval": 2000
+        }
+
     }
 }

@@ -5,13 +5,33 @@
     ],
     "perf-emitter": {
         "type": "single-user-event-emitter",
-        "frequency": "1 each second",
+        "frequency": "instant",
         "event": "foo",
-        "data": "Hello, World!"
+        "data": "Hello, World!",
+        "timeout-ms": 10000
     },
     "perf-subscriber": {
         "type": "single-user-subscriber",
         "event": "foo",
-        "on-event": "print-data"
+        "on-event": "discard",
+        "timeout-ms": 11000
+    },
+    "options": {
+        "host": "ws://127.0.0.1:6020",
+        "authParams": {
+            "server": "test"
+        },
+        "clientOptions": {
+            "maxReconnectAttempts": 10000000,
+            "reconnectIntervalIncrement": 100,
+            "rpcAckTimeout": 20000,
+            "rpcResponseTimeout": 20000,
+            "subscriptionTimeout": 20000,
+            "recordReadAckTimeout": 20000,
+            "recordReadTimeout": 20000,
+            "recordDeleteTimeout": 20000,
+            "heartbeatInterval": 10000,
+            "maxReconnectInterval": 2000
+        }
     }
 }

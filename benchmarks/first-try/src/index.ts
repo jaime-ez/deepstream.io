@@ -3,6 +3,8 @@ import { parse } from './parser'
 import * as fs from 'fs'
 import * as dsUtils from 'deepstream-utils'
 
+const quietDots = parseInt(process.env.NON_VERBOSE_DOTS) || false
+
 function printUsage() {
   console.error('Usage: node index.js filepath')
 }
@@ -70,10 +72,12 @@ async function main() {
   const checkInterval = 1000
   const checkSingle = () => {
     loops++
-    if (loops % 5 === 0) {
-      process.stdout.write(`${loops}`)
-    } else {
-      process.stdout.write('.')
+    if (!quietDots) {
+      if (loops % 5 === 0) {
+        process.stdout.write(`${loops}`)
+      } else {
+        process.stdout.write('.')
+      }
     }
     if (continueChecker) {
       setTimeout(checkSingle, checkInterval)

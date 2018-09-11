@@ -1,7 +1,25 @@
 // Converts a string describing a frequency to a number representing the
 // milliseconds elapsed with the given frequency between two events
 function convertFrequency(freq: string): number {
-  return -1
+  if (freq === 'instant') return 0
+  const [t, timeFrame] = freq.split(' per ')
+  const T: number = parseInt(t)
+  if (T === 0 || !T) {
+    throw Error(`Could not parse frequency "${freq}" or frequency of 0`)
+  }
+
+  switch (timeFrame) {
+    case 'minute':
+      return Math.round(60 * 1000 / T)
+    case 'second':
+      return Math.round(1000 / T)
+    default:
+      throw Error(`Frequency "${freq}" is not a valid frequency value`)
+  }
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) =>  setTimeout(resolve, ms))
 }
 
 const debugMode = process.env.RUNNERS_DEBUG_MODE || false
@@ -23,6 +41,12 @@ function makeSimpleReport(what: string): PerformanceReport {
   }
 }
 
+function dsUtilsLogin(dsUtils: any, options: object) {
+  const ds = new dsUtils(options)
+  ds.initClient()
+  return ds.login().then(() => ds)
+}
+
 function logData<T>(logger: LoggingFunction, data: any | Array<T>, key: string = '', prefix: string = ''): void {
   if (data instanceof Array) {
     logger(`${prefix}${key} = [`)
@@ -42,19 +66,55 @@ function logData<T>(logger: LoggingFunction, data: any | Array<T>, key: string =
   }
 }
 
+interface EventHandler {
+  handleEvent(o: any): void
+}
+
+class EventDiscarder implements EventHandler {
+  handleEvent(o: any) {}
+}
+
+class EventPrinter implements EventHandler {
+  handleEvent(o: any) {
+    const loggingF = (s: string) => console.log('EventPrinter |>'.padEnd(20), s)
+    logData(loggingF, o, 'eventData')
+  }
+}
+
+function getEventHandler(name: string): EventHandler {
+  switch(name) {
+    case 'print-data':
+      return new EventPrinter()
+    case 'discard':
+      return new EventDiscarder()
+  }
+  throw Error(`Could not find event handler for "${name}"`)
+}
+
 export class SingleUserEventEmitter implements PerformanceRunner {
   public frequencyInMs: number
   public eventName: string
   public data: any
+  public timeoutInMs: number
 
   constructor(o: any) {
     this.frequencyInMs = convertFrequency(o.frequency)
     this.eventName = o.event
     this.data = o.data
+    this.timeoutInMs = parseInt(o['timeout-ms'])
   }
 
-  public async runPerformance(dsClient: object, options: object) {
-    return makeSimpleReport('Done!')
+  public async runPerformance(dsUtils: object, options: object) {
+    const ds = await dsUtilsLogin(dsUtils, options)
+    const startTime = Date.now()
+    let counter = 0
+    while (startTime + this.timeoutInMs > Date.now()) {
+      counter++
+      ds.client.event.emit(this.eventName, this.data)
+      await sleep(this.frequencyInMs)
+    }
+
+    return makeSimpleReport(`Single User Event Emitter - Finished ${counter} event emits`)
   }
 
   public describeRunner(logger: LoggingFunction) {
@@ -65,7 +125,8 @@ export class SingleUserEventEmitter implements PerformanceRunner {
       const data = {
         frequencyInMs: this.frequencyInMs,
         eventName: this.eventName,
-        data: this.data
+        data: this.data,
+        timeoutInMs: this.timeoutInMs
       }
       logData(logger, data, 'data')
     }
@@ -75,14 +136,26 @@ export class SingleUserEventEmitter implements PerformanceRunner {
 export class SingleUserSubscriber implements PerformanceRunner {
   public eventName: string
   public onEventName: string
+  public timeoutInMs: number
 
   constructor(o: any) {
     this.eventName = o.event
     this.onEventName = o['on-event']
+    this.timeoutInMs = parseInt(o['timeout-ms'])
   }
 
   public async runPerformance(dsClient: object, options: object) {
-    return makeSimpleReport('Single user subscriber result')
+    const ds = await dsUtilsLogin(dsClient, options)
+    const eventHandler = getEventHandler(this.onEventName)
+    let counter = 0
+
+    ds.client.event.subscribe(this.eventName, (data: any) => {
+      counter++
+      eventHandler.handleEvent(data)
+    })
+
+    await sleep(this.timeoutInMs)
+    return makeSimpleReport(`Single User Subscriber - Counted ${counter} emitted events`)
   }
 
   public describeRunner(logger: LoggingFunction) {
@@ -92,7 +165,8 @@ export class SingleUserSubscriber implements PerformanceRunner {
     if (debugMode) {
       const data = {
         eventName: this.eventName,
-        onEventName: this.onEventName
+        onEventName: this.onEventName,
+        timeoutInMs: this.timeoutInMs
       }
       logData(logger, data, 'data')
     }
