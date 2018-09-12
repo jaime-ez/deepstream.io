@@ -1,0 +1,38 @@
+{
+    "description": [
+        "A single client will emit several events per millisecond",
+        "A second client will subscribe to those events"
+    ],
+    "perf-emitter": {
+        "type": "single-user-fast-emitter",
+        "messages-per-milli": 10,
+        "event": "bar",
+        "data": "Gotta go fast!",
+        "wait-at-start-ms": 5000,
+        "timeout-ms": 10000
+    },
+   "perf-subscriber": {
+        "type": "single-user-subscriber",
+        "event": "bar",
+        "on-event": "discard",
+        "timeout-ms": 20000
+    },
+     "options": {
+        "host": "ws://127.0.0.1:6020",
+        "authParams": {
+            "server": "test"
+        },
+        "clientOptions": {
+            "maxReconnectAttempts": 10000000,
+            "reconnectIntervalIncrement": 100,
+            "rpcAckTimeout": 20000,
+            "rpcResponseTimeout": 20000,
+            "subscriptionTimeout": 20000,
+            "recordReadAckTimeout": 20000,
+            "recordReadTimeout": 20000,
+            "recordDeleteTimeout": 20000,
+            "heartbeatInterval": 10000,
+            "maxReconnectInterval": 2000
+        }
+    }
+}

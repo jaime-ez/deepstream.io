@@ -284,6 +284,56 @@ export class OnAndOffSubscriber implements PerformanceRunner {
   }
 }
 
+// ---
+
+export class SingleUserFastEmitter implements PerformanceRunner {
+  public name: string
+  public eventName: string
+  public messagesPerMilli: number
+  public waitAtStartMs: number
+  public timeoutInMs: number
+  public data: any
+
+  constructor(o: any) {
+    this.name = o.name
+    this.eventName = o.event
+    this.messagesPerMilli = parseInt(o['messages-per-milli'])
+    this.waitAtStartMs = parseInt(o['wait-at-start-ms'])
+    this.timeoutInMs = parseInt(o['timeout-ms'])
+    this.data = o.data
+  }
+
+  public async runPerformance(dsClient: object, options: object) {
+    const user = await dsUtilsLogin(dsClient, options)
+    await sleep(this.waitAtStartMs)
+
+    let counter = 0
+    const startTime = Date.now()
+    while (startTime + this.timeoutInMs > Date.now()) {
+      const countingStart = Date.now()
+      for (let cnt = 0; cnt < this.messagesPerMilli; ++cnt) {
+        user.client.event.emit(this.eventName, this.data)
+      }
+      counter += this.messagesPerMilli
+      if (countingStart === Date.now()) {
+        await sleep(1)
+      }
+    }
+
+    user.close()
+    return makeSimpleReport(`Emitted ${counter} events`)
+  }
+
+  public describeRunner(logger: LoggingFunction) {
+    logger('Single User Fast Emitter')
+    logger('')
+    logger('Creates an emitter that emits something every millisecond')
+    if (debugMode) {
+      logData(logger, this, 'data')
+    }
+  }
+}
+
 export class EmptyRunner implements PerformanceRunner {
   public name: string
 
@@ -311,6 +361,8 @@ export function createRunner(o: any): PerformanceRunner {
       return new ParallelUsersEmit(o)
     case 'on-and-off-subscriber':
       return new OnAndOffSubscriber(o)
+    case 'single-user-fast-emitter':
+      return new SingleUserFastEmitter(o)
     default:
       return new EmptyRunner(o)
   }
