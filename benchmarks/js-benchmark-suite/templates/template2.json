@@ -16,7 +16,9 @@
         "type": "on-and-off-subscriber",
         "event": "foo",
         "on-event": "discard",
-        "frequency": "1 per second"
+        "frequency": "1 per second",
+        "wait-at-start-ms": 0,
+        "timeout-ms": 10000
     },
     "options": {
         "host": "ws://127.0.0.1:8000",
