@@ -1,20 +1,21 @@
 {
     "description": [
-        "A single user will emit an event every second",
-        "A second user will subscribe to the event and print 'Hello, World!'"
+        "A single user will emit 1000 events every second",
+        "A second user will subscribe to the event and discard it"
     ],
     "perf-emitter": {
         "type": "single-user-event-emitter",
-        "frequency": "instant",
+        "frequency": "1000 per second",
         "event": "foo",
         "data": "Hello, World!",
+        "wait-at-start-ms": 5000,
         "timeout-ms": 10000
     },
     "perf-subscriber": {
         "type": "single-user-subscriber",
         "event": "foo",
         "on-event": "discard",
-        "timeout-ms": 11000
+        "timeout-ms": 20000
     },
     "options": {
         "host": "ws://127.0.0.1:6020",
