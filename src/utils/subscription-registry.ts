@@ -136,11 +136,11 @@ export default class SubscriptionRegistry {
   }
 
   /**
-  * This method allows you to customise the SubscriptionRegistry so that it can send
-  * custom events and ack messages back.
-  * For example, when using the ACTIONS.LISTEN, you would override SUBSCRIBE with
-  * ACTIONS.SUBSCRIBE and UNSUBSCRIBE with UNSUBSCRIBE
-  */
+   * This method allows you to customise the SubscriptionRegistry so that it can send
+   * custom events and ack messages back.
+   * For example, when using the ACTIONS.LISTEN, you would override SUBSCRIBE with
+   * ACTIONS.SUBSCRIBE and UNSUBSCRIBE with UNSUBSCRIBE
+   */
   public setAction (name: string, value: EVENT_ACTIONS | RECORD_ACTIONS | RPC_ACTIONS): void {
     this.constants[name.toUpperCase()] = value
   }
@@ -166,17 +166,19 @@ export default class SubscriptionRegistry {
     const [subscribersUncast, closedSocketsUncast] = partition(subscription.sockets, isOpenSocket)
     const subscribers = subscribersUncast as Array<SocketWrapper>
     const closedSockets = closedSocketsUncast as Array<SocketWrapper>
-    const first = subscribers.values().next().value
-    const msg = first.getMessage(message)
-    const preparedMessage = first.prepareMessage(msg)
+    if (subscribers.length) {
+      const first = subscribers[0]
+      const msg = first.getMessage(message)
+      const preparedMessage = first.prepareMessage(msg)
 
-    for (const sock of subscribers) {
-      if (sock === socket) {
-        continue
+      for (const sock of subscribers) {
+        if (sock === socket) {
+          continue
+        }
+        sock.sendPrepared(preparedMessage)
       }
-      sock.sendPrepared(preparedMessage)
+      first.finalizeMessage(preparedMessage)
     }
-    first.finalizeMessage(preparedMessage)
     closedSockets.map(sock => this.onSocketClose(sock))
     return
 
@@ -352,8 +354,8 @@ export default class SubscriptionRegistry {
   }
 
   /**
-  * Called whenever a socket closes to remove all of its subscriptions
-  */
+   * Called whenever a socket closes to remove all of its subscriptions
+   */
   private onSocketClose (socket: SocketWrapper): void {
     const subscriptions = this.sockets.get(socket)
     if (!subscriptions) {
