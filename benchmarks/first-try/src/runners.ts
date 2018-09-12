@@ -1,3 +1,5 @@
+import { sleep } from './util'
+
 // Converts a string describing a frequency to a number representing the
 // milliseconds elapsed with the given frequency between two events
 function convertFrequency(freq: string): number {
@@ -18,10 +20,6 @@ function convertFrequency(freq: string): number {
   }
 }
 
-function sleep(ms: number) {
-  return new Promise((resolve) =>  setTimeout(resolve, ms))
-}
-
 const debugMode = process.env.RUNNERS_DEBUG_MODE || false
 
 type LoggingFunction = (s: string) => void
@@ -31,6 +29,7 @@ export interface PerformanceReport {
 }
 
 export interface PerformanceRunner {
+  name: string
   runPerformance(dsClient: object, options: object): Promise<PerformanceReport>
   describeRunner(logger: LoggingFunction): void
 }
@@ -91,27 +90,38 @@ function getEventHandler(name: string): EventHandler {
   throw Error(`Could not find event handler for "${name}"`)
 }
 
+// ---
+
 export class SingleUserEventEmitter implements PerformanceRunner {
+  public name: string
   public frequencyInMs: number
+  public waitAtStartInMs: number
   public eventName: string
   public data: any
   public timeoutInMs: number
 
   constructor(o: any) {
+    this.name = o.name
     this.frequencyInMs = convertFrequency(o.frequency)
     this.eventName = o.event
     this.data = o.data
     this.timeoutInMs = parseInt(o['timeout-ms'])
+    this.waitAtStartInMs = parseInt(o['wait-at-start-ms'])
   }
 
   public async runPerformance(dsUtils: object, options: object) {
+    if (this.waitAtStartInMs) {
+      await sleep(this.waitAtStartInMs)
+    }
     const ds = await dsUtilsLogin(dsUtils, options)
     const startTime = Date.now()
     let counter = 0
     while (startTime + this.timeoutInMs > Date.now()) {
       counter++
       ds.client.event.emit(this.eventName, this.data)
-      await sleep(this.frequencyInMs)
+      if (this.frequencyInMs > 0) {
+        await sleep(this.frequencyInMs)
+      }
     }
 
     return makeSimpleReport(`Single User Event Emitter - Finished ${counter} event emits`)
@@ -123,6 +133,7 @@ export class SingleUserEventEmitter implements PerformanceRunner {
     logger('Creates a single client that emits event at a regular pace')
     if (debugMode) {
       const data = {
+        name: this.name,
         frequencyInMs: this.frequencyInMs,
         eventName: this.eventName,
         data: this.data,
@@ -133,12 +144,16 @@ export class SingleUserEventEmitter implements PerformanceRunner {
   }
 }
 
+// ---
+
 export class SingleUserSubscriber implements PerformanceRunner {
+  public name: string
   public eventName: string
   public onEventName: string
   public timeoutInMs: number
 
   constructor(o: any) {
+    this.name = o.name
     this.eventName = o.event
     this.onEventName = o['on-event']
     this.timeoutInMs = parseInt(o['timeout-ms'])
@@ -164,6 +179,7 @@ export class SingleUserSubscriber implements PerformanceRunner {
     logger('Creates a single client that subscribes to an event and does something with the')
     if (debugMode) {
       const data = {
+        name: this.name,
         eventName: this.eventName,
         onEventName: this.onEventName,
         timeoutInMs: this.timeoutInMs
@@ -173,13 +189,17 @@ export class SingleUserSubscriber implements PerformanceRunner {
   }
 }
 
+// ---
+
 export class ParallelUsersEmit implements PerformanceRunner {
+  public name: string
   public numberOfUsers: number
   public eventName: string
   public frequencyInMs: number
   public data: any
 
   constructor(o: any) {
+    this.name = o.name
     this.numberOfUsers = o.users
     this.eventName = o.event
     this.frequencyInMs = convertFrequency(o.frequency)
@@ -196,6 +216,7 @@ export class ParallelUsersEmit implements PerformanceRunner {
     logger('Creates several clients that emit to a single event at a given frequency')
     if (debugMode) {
       const data = {
+        name: this.name,
         eventName: this.eventName,
         numberOfUsers: this.numberOfUsers,
         frequencyInMs: this.frequencyInMs,
@@ -206,12 +227,16 @@ export class ParallelUsersEmit implements PerformanceRunner {
   }
 }
 
+// ---
+
 export class OnAndOffSubscriber implements PerformanceRunner {
+  public name: string
   public eventName: string
   public onEventName: string
   public frequencyInMs: number
 
   constructor(o: any) {
+    this.name = o.name
     this.eventName = o.event
     this.onEventName = o['on-event']
     this.frequencyInMs = convertFrequency(o.frequency)
@@ -227,6 +252,7 @@ export class OnAndOffSubscriber implements PerformanceRunner {
     logger('Creates a subscriber that repeatedly subscribes and unsubscribes')
     if (debugMode) {
       const data = {
+        name: this.name,
         eventName: this.eventName,
         onEventName: this.onEventName,
         frequencyInMs: this.frequencyInMs
@@ -237,8 +263,12 @@ export class OnAndOffSubscriber implements PerformanceRunner {
 }
 
 export class EmptyRunner implements PerformanceRunner {
+  public name: string
+
   // TODO: Throw anywhere here?
-  constructor(o: any) {}
+  constructor(o: any) {
+    this.name = 'empty'
+  }
 
   public async runPerformance(dsClient: object, options: object) {
     return makeSimpleReport('empty')
