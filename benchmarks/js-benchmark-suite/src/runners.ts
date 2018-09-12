@@ -94,7 +94,7 @@ function getEventHandler(name: string): EventHandler {
 
 export class SingleUserEventEmitter implements PerformanceRunner {
   public name: string
-  public frequencyInMs: number
+  public cooldownInMs: number
   public waitAtStartInMs: number
   public eventName: string
   public data: any
@@ -102,7 +102,7 @@ export class SingleUserEventEmitter implements PerformanceRunner {
 
   constructor(o: any) {
     this.name = o.name
-    this.frequencyInMs = convertFrequency(o.frequency)
+    this.cooldownInMs = convertFrequency(o.frequency)
     this.eventName = o.event
     this.data = o.data
     this.timeoutInMs = parseInt(o['timeout-ms'])
@@ -119,11 +119,11 @@ export class SingleUserEventEmitter implements PerformanceRunner {
     while (startTime + this.timeoutInMs > Date.now()) {
       counter++
       ds.client.event.emit(this.eventName, this.data)
-      if (this.frequencyInMs > 0) {
-        await sleep(this.frequencyInMs)
+      if (this.cooldownInMs > 0) {
+        await sleep(this.cooldownInMs)
       }
     }
-
+    ds.client.close()
     return makeSimpleReport(`Single User Event Emitter - Finished ${counter} event emits`)
   }
 
@@ -132,14 +132,7 @@ export class SingleUserEventEmitter implements PerformanceRunner {
     logger('')
     logger('Creates a single client that emits event at a regular pace')
     if (debugMode) {
-      const data = {
-        name: this.name,
-        frequencyInMs: this.frequencyInMs,
-        eventName: this.eventName,
-        data: this.data,
-        timeoutInMs: this.timeoutInMs
-      }
-      logData(logger, data, 'data')
+      logData(logger, this, 'data')
     }
   }
 }
@@ -170,6 +163,7 @@ export class SingleUserSubscriber implements PerformanceRunner {
     })
 
     await sleep(this.timeoutInMs)
+    ds.client.close()
     return makeSimpleReport(`Single User Subscriber - Counted ${counter} emitted events`)
   }
 
@@ -178,13 +172,7 @@ export class SingleUserSubscriber implements PerformanceRunner {
     logger('')
     logger('Creates a single client that subscribes to an event and does something with the')
     if (debugMode) {
-      const data = {
-        name: this.name,
-        eventName: this.eventName,
-        onEventName: this.onEventName,
-        timeoutInMs: this.timeoutInMs
-      }
-      logData(logger, data, 'data')
+      logData(logger, this, 'data')
     }
   }
 }
@@ -195,19 +183,48 @@ export class ParallelUsersEmit implements PerformanceRunner {
   public name: string
   public numberOfUsers: number
   public eventName: string
-  public frequencyInMs: number
+  public cooldownInMs: number
+  public waitAtStartTimeMs: number
+  public timeoutInMs: number
   public data: any
 
   constructor(o: any) {
     this.name = o.name
     this.numberOfUsers = o.users
     this.eventName = o.event
-    this.frequencyInMs = convertFrequency(o.frequency)
+    this.cooldownInMs = convertFrequency(o.frequency)
     this.data = o.data
+    this.waitAtStartTimeMs = o['wait-at-start-ms']
+    this.timeoutInMs = o['timeout-ms']
   }
 
   public async runPerformance(dsClient: object, options: object) {
-    return makeSimpleReport('parallel')
+    await sleep(this.waitAtStartTimeMs)
+
+    // Create a list of users with size this.numberOfUsers that are logged in
+    const userPromises = Array(this.numberOfUsers)
+      .fill(0)
+      .map(unused => dsUtilsLogin(dsClient, options))
+
+    const users = []
+    // Let all users log in
+    for (const user of userPromises) {
+      users.push(await user)
+    }
+
+    let counter = 0
+    const startTime = Date.now()
+    while (startTime + this.timeoutInMs > Date.now()) {
+      // Here we just fire the events.
+      users.map(user => user.client.event.emit(this.eventName, this.data))
+      counter += this.numberOfUsers
+      await sleep(this.cooldownInMs)
+    }
+
+    // It is done, exit with the clients
+    users.map(user => user.close())
+
+    return makeSimpleReport(`Parallel Users Emit - Created ${counter} events`)
   }
 
   public describeRunner(logger: LoggingFunction) {
@@ -215,14 +232,7 @@ export class ParallelUsersEmit implements PerformanceRunner {
     logger('')
     logger('Creates several clients that emit to a single event at a given frequency')
     if (debugMode) {
-      const data = {
-        name: this.name,
-        eventName: this.eventName,
-        numberOfUsers: this.numberOfUsers,
-        frequencyInMs: this.frequencyInMs,
-        data: this.data
-      }
-      logData(logger, data, 'data')
+      logData(logger, this, 'data')
     }
   }
 }
@@ -233,17 +243,35 @@ export class OnAndOffSubscriber implements PerformanceRunner {
   public name: string
   public eventName: string
   public onEventName: string
-  public frequencyInMs: number
+  public cooldownInMs: number
+  public waitAtStartMs: number
+  public timeoutInMs: number
 
   constructor(o: any) {
     this.name = o.name
     this.eventName = o.event
     this.onEventName = o['on-event']
-    this.frequencyInMs = convertFrequency(o.frequency)
+    this.cooldownInMs = convertFrequency(o.frequency)
+    this.waitAtStartMs = parseInt(o['wait-at-start-ms'])
+    this.timeoutInMs = parseInt(o['timeout-ms'])
   }
 
   public async runPerformance(dsClient: object, options: object) {
-    return makeSimpleReport('on off')
+    const user = await dsUtilsLogin(dsClient, options)
+    await sleep(this.waitAtStartMs)
+
+    let counter = 0
+    const handler = getEventHandler(this.onEventName).handleEvent
+    const startTime = Date.now()
+    while (startTime + this.timeoutInMs > Date.now()) {
+      user.client.event.subscribe(this.eventName, handler)
+      await sleep(this.timeoutInMs)
+      user.client.event.unsubscribe(this.eventName, handler)
+      await sleep(this.timeoutInMs)
+      counter++
+    }
+    user.close()
+    return makeSimpleReport(`Subscribed and unsubscribed ${counter} times`)
   }
 
   public describeRunner(logger: LoggingFunction) {
@@ -251,13 +279,7 @@ export class OnAndOffSubscriber implements PerformanceRunner {
     logger('')
     logger('Creates a subscriber that repeatedly subscribes and unsubscribes')
     if (debugMode) {
-      const data = {
-        name: this.name,
-        eventName: this.eventName,
-        onEventName: this.onEventName,
-        frequencyInMs: this.frequencyInMs
-      }
-      logData(logger, data, 'data')
+      logData(logger, this, 'data')
     }
   }
 }

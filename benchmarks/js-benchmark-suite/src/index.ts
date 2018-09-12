@@ -39,6 +39,11 @@ interface ClientMessage {
  * @param args
  */
 async function runAsClient(fpath: string, clientName: string) {
+  if (!process.send) {
+    // If we want to debug and only run a single client we will print whatever
+    // is sent to the master process instead of crashing
+    process.send = console.log
+  }
   const data = parse(fpath)
   const runners = data.runners.map(createRunner)
   const runnerArray = runners.filter(runner => runner.name === clientName)
