@@ -1,5 +1,6 @@
 import StateRegistry from '../cluster/state-registry'
 import { EVENT, EVENT_ACTIONS, PRESENCE_ACTIONS, RECORD_ACTIONS, RPC_ACTIONS, TOPIC, SubscriptionMessage } from '../constants'
+import { partition } from './utils'
 
 let idCounter = 0
 
@@ -161,10 +162,14 @@ export default class SubscriptionRegistry {
       return
     }
 
-    const subscribers = subscription.sockets
+    const isOpenSocket = (sock: SocketWrapper) => !sock.isClosed
+    const [subscribersUncast, closedSocketsUncast] = partition(subscription.sockets, isOpenSocket)
+    const subscribers = subscribersUncast as Array<SocketWrapper>
+    const closedSockets = closedSocketsUncast as Array<SocketWrapper>
     const first = subscribers.values().next().value
     const msg = first.getMessage(message)
     const preparedMessage = first.prepareMessage(msg)
+
     for (const sock of subscribers) {
       if (sock === socket) {
         continue
@@ -172,6 +177,7 @@ export default class SubscriptionRegistry {
       sock.sendPrepared(preparedMessage)
     }
     first.finalizeMessage(preparedMessage)
+    closedSockets.map(sock => this.onSocketClose(sock))
     return
 
     // const msgString = getMessage(message, false)
@@ -358,6 +364,7 @@ export default class SubscriptionRegistry {
       subscription.sockets.delete(socket)
       this.removeSocket(subscription, socket)
     }
+    this.sockets.delete(socket)
   }
 
   /**

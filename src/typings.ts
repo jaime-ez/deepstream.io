@@ -19,6 +19,7 @@ interface SimpleSocketWrapper extends NodeJS.EventEmitter {
 interface SocketWrapper extends SimpleSocketWrapper {
   uuid: number
   __id: number
+  isClosed: boolean
   authData: object
   getHandshakeData: Function
   onMessage: Function
