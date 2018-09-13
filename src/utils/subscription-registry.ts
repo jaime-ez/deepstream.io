@@ -351,6 +351,12 @@ export default class SubscriptionRegistry {
     } else {
       // log error
     }
+
+    // There is a special case for the last socket that is not deleted from
+    // `this.sockets` correctly in onSocketClose.
+    if (subscription.sockets.size === 0) {
+      this.sockets.delete(socket)
+    }
   }
 
   /**
