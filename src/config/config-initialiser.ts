@@ -154,11 +154,17 @@ function handlePlugins (config: InternalDeepstreamConfig, services: any): void {
   for (const key in plugins) {
     const plugin = plugins[key]
     if (plugin) {
-      const PluginConstructor = resolvePluginClass(plugin, key)
-      services[key] = new PluginConstructor(plugin.options)
+      if (plugin.deepstreamInitialized) {
+        services[key] = plugin
+      } else {
+        const PluginConstructor = resolvePluginClass(plugin, key)
+        services[key] = new PluginConstructor(plugin.options)
+      }
+
       if (services.registeredPlugins.indexOf(key) === -1) {
         services.registeredPlugins.push(key)
       }
+
     }
   }
 }
