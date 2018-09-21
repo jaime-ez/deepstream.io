@@ -209,13 +209,25 @@ export default class UWSConnectionEndpoint extends EventEmitter implements Conne
     return ''
   }
 
+  private getServerAddressAndPort (): Array<string> {
+    const serverAddress = this.server.address()
+    if (typeof serverAddress === 'string') {
+      return serverAddress.split(':')
+    } else if (serverAddress.address && serverAddress.port){
+      return [
+        serverAddress.address,
+        `${serverAddress.port}`
+      ]
+    } else {
+      throw Error(`Could not recognize "${serverAddress}" with type "${typeof serverAddress}" as a server address`)
+    }
+  }
+
   /**
    * Called for the ready event of the ws server.
    */
   private _onReady (): void {
-    const serverAddress = this.server.address()
-    const address = serverAddress.address
-    const port = serverAddress.port
+    const [address, port] = this.getServerAddressAndPort()
     const wsMsg = `Listening for websocket connections on ${address}:${port}${this.urlPath}`
     this.logger.info(EVENT.INFO, wsMsg)
     const hcMsg = `Listening for health checks on path ${this.healthCheckPath} `
