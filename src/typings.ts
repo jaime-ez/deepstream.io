@@ -14,6 +14,7 @@ interface SimpleSocketWrapper extends NodeJS.EventEmitter {
   isRemote: boolean
   sendMessage (message: Message, buffer?: boolean): void
   sendAckMessage (message: Message, buffer?: boolean): void
+  clientData?: object | null
 }
 
 interface SocketWrapper extends SimpleSocketWrapper {
@@ -21,6 +22,7 @@ interface SocketWrapper extends SimpleSocketWrapper {
   __id: number
   isClosed: boolean
   authData: object
+  clientData: object | null
   getHandshakeData: Function
   onMessage: Function
   authCallback: Function
@@ -114,6 +116,7 @@ type StorageReadCallback = (error: string | null, version: number, result: any) 
 type StorageWriteCallback = (error: string | null) => void
 
 interface StoragePlugin extends DeepstreamPlugin {
+  apiVersion?: number
   set (recordName: string, version: number, data: any, callback: StorageWriteCallback, metaData?: any): void
   get (recordName: string, callback: StorageReadCallback, metaData?: any): void
   delete (recordName: string, callback: StorageWriteCallback, metaData?: any): void
@@ -167,6 +170,7 @@ interface DeepstreamConfig {
   permission?: PluginConfig
 
   storageExclusionPrefixes?: Array<string>
+  provideRPCRequestorDetails?: boolean
   rpcAckTimeout?: number
   rpcTimeout?: number
   cacheRetrievalTimeout?: number
@@ -205,6 +209,7 @@ interface InternalDeepstreamConfig {
   permission: PluginConfig
 
   storageExclusionPrefixes: Array<string>
+  provideRPCRequestorDetails: boolean
   rpcAckTimeout: number
   rpcTimeout: number
   cacheRetrievalTimeout: number
