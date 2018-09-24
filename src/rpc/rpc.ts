@@ -33,7 +33,7 @@ export default class Rpc {
     this.services = services
     const requestorName = this.getRequestorName(requestor)
     const requestorData = this.getRequestorData(requestor)
-    this.message = Object.assign(requestorName, requestorData, message)
+    this.message = Object.assign({}, message, requestorName, requestorData)
     this.isAccepted = false
 
     this.setProvider(provider)

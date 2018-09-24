@@ -85,7 +85,48 @@ describe('the rpcHandler uses requestor fields correctly', () => {
 
     rpcHandler = new RpcHandler(config, services, testMocks.subscriptionRegistry)
     rpcHandler.handle(requestor.socketWrapper, requestMessage)
+  })
 
+
+  it ('overwrites fake requestorName and fake requestorData', () => {
+    config.provideRPCRequestorDetails = true
+    config.RPCRequestorNameTerm = null
+    config.RPCRequestorDataTerm = null
+
+    provider.socketWrapperMock
+      .expects('sendMessage')
+      .once()
+      .withExactArgs(Object.assign({
+        requestorName: 'requestor',
+        requestorData: { bestLanguage: 'not BF' }
+      }, requestMessage))
+
+    const fakeRequestMessage = Object.assign({
+      requestorName: 'evil-requestor',
+      requestorData: { bestLanguage: 'malbolge' }
+    }, requestMessage)
+    rpcHandler = new RpcHandler(config, services, testMocks.subscriptionRegistry)
+    rpcHandler.handle(requestor.socketWrapper, fakeRequestMessage)
+  })
+
+  it ('overwrites fake renamed requestorName and fake renamed requestorData', () => {
+    config.provideRPCRequestorDetails = true
+    config.RPCRequestorNameTerm = 'userId'
+    config.RPCRequestorDataTerm = 'userData'
+    provider.socketWrapperMock
+      .expects('sendMessage')
+      .once()
+      .withExactArgs(Object.assign({
+        userId: 'requestor',
+        userData: { bestLanguage: 'not BF' }
+      }, requestMessage))
+
+    const fakeRequestMessage = Object.assign({
+      userId: 'evil-requestor',
+      userData: { bestLanguage: 'malbolge' }
+    }, requestMessage)
+    rpcHandler = new RpcHandler(config, services, testMocks.subscriptionRegistry)
+    rpcHandler.handle(requestor.socketWrapper, fakeRequestMessage)
   })
 
 })
