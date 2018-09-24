@@ -34,7 +34,6 @@ export default class Rpc {
     const requestorName = this.getRequestorName(requestor)
     const requestorData = this.getRequestorData(requestor)
     this.message = Object.assign(requestorName, requestorData, message)
-    this.message = message
     this.isAccepted = false
 
     this.setProvider(provider)
@@ -44,9 +43,9 @@ export default class Rpc {
     const ret: any = {}
     if (this.config.provideRPCRequestorDetails || this.config.provideRPCRequestorName) {
       if (this.config.RPCRequestorNameTerm) {
-        ret[this.config.RPCRequestorNameTerm] = requestor.clientData
+        ret[this.config.RPCRequestorNameTerm] = requestor.user
       } else {
-        ret.requestorName = requestor.clientData
+        ret.requestorName = requestor.user
       }
     }
     return ret
@@ -58,7 +57,7 @@ export default class Rpc {
       if (this.config.RPCRequestorDataTerm) {
         ret[this.config.RPCRequestorDataTerm] = requestor.clientData
       } else {
-        ret.requestorName = requestor.clientData
+        ret.requestorData = requestor.clientData
       }
     }
     return ret
