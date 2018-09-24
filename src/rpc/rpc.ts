@@ -31,21 +31,37 @@ export default class Rpc {
     this.provider = provider
     this.config = config
     this.services = services
-    if (this.config.provideRPCRequestorDetails ||
-        this.config.provideRPCRequestorName ||
-        this.config.provideRPCRequestorData) {
-      const requestorName = (this.config.provideRPCRequestorDetails || this.config.provideRequestorName) ?
-        {requestorName: requestor.user} : {}
-      const requestorData = (this.config.provideRPCRequestorDetails || this.config.provideRequestorData) ?
-        {requestorData: requestor.clientData} : {}
-
-      this.message = Object.assign(requestorName, requestorData, message)
-    } else {
-      this.message = message
-    }
+    const requestorName = this.getRequestorName(requestor)
+    const requestorData = this.getRequestorData(requestor)
+    this.message = Object.assign(requestorName, requestorData, message)
+    this.message = message
     this.isAccepted = false
 
     this.setProvider(provider)
+  }
+
+  private getRequestorName (requestor: SimpleSocketWrapper): any {
+    const ret: any = {}
+    if (this.config.provideRPCRequestorDetails || this.config.provideRPCRequestorName) {
+      if (this.config.RPCRequestorNameTerm) {
+        ret[this.config.RPCRequestorNameTerm] = requestor.clientData
+      } else {
+        ret.requestorName = requestor.clientData
+      }
+    }
+    return ret
+  }
+
+  private getRequestorData (requestor: SimpleSocketWrapper): any {
+    const ret: any = {}
+    if (this.config.provideRPCRequestorDetails || this.config.provideRPCRequestorData) {
+      if (this.config.RPCRequestorDataTerm) {
+        ret[this.config.RPCRequestorDataTerm] = requestor.clientData
+      } else {
+        ret.requestorName = requestor.clientData
+      }
+    }
+    return ret
   }
 
   /**
