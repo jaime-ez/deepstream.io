@@ -210,6 +210,8 @@ interface InternalDeepstreamConfig {
 
   storageExclusionPrefixes: Array<string>
   provideRPCRequestorDetails: boolean
+  provideRPCRequestorName: boolean
+  provideRPCRequestorData: boolean
   rpcAckTimeout: number
   rpcTimeout: number
   cacheRetrievalTimeout: number

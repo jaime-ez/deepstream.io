@@ -31,11 +31,15 @@ export default class Rpc {
     this.provider = provider
     this.config = config
     this.services = services
-    if (this.config.provideRPCRequestorDetails) {
-      this.message = Object.assign({
-        requestorName: requestor.user,
-        requestorData: requestor.clientData
-      }, message)
+    if (this.config.provideRPCRequestorDetails ||
+        this.config.provideRPCRequestorName ||
+        this.config.provideRPCRequestorData) {
+      const requestorName = (this.config.provideRPCRequestorDetails || this.config.provideRequestorName) ?
+        {requestorName: requestor.user} : {}
+      const requestorData = (this.config.provideRPCRequestorDetails || this.config.provideRequestorData) ?
+        {requestorData: requestor.clientData} : {}
+
+      this.message = Object.assign(requestorName, requestorData, message)
     } else {
       this.message = message
     }
