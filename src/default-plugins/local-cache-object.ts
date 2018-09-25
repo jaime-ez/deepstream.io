@@ -23,10 +23,11 @@ export default class LocalCache extends EventEmitter implements StoragePlugin {
   }
 
   public get (key: string, callback: StorageReadCallback) {
-    if (!this.data[key]) {
+    const data = this.data[key]
+    if (!data) {
       process.nextTick(() => callback(null, -1, null))
     } else {
-      process.nextTick(() => callback(null, this.data[key].version, this.data[key].data))
+      process.nextTick(() => callback(null, data.version, data.data))
     }
   }
 
