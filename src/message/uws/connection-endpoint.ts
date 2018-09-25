@@ -590,7 +590,11 @@ export default class UWSConnectionEndpoint extends EventEmitter implements Conne
     if (!this.urlPath || this.urlPath === requestPath) {
       this._handleUpgrade(request, socket)
     }
-    UWSConnectionEndpoint._terminateSocket(socket, 400, 'URL not supported')
+    try {
+      UWSConnectionEndpoint._terminateSocket(socket, 400, 'URL not supported')
+    } catch (e) {
+      // already terminated
+    }
   }
 
   /**

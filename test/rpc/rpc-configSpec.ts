@@ -87,7 +87,6 @@ describe('the rpcHandler uses requestor fields correctly', () => {
     rpcHandler.handle(requestor.socketWrapper, requestMessage)
   })
 
-
   it ('overwrites fake requestorName and fake requestorData', () => {
     config.provideRPCRequestorDetails = true
     config.RPCRequestorNameTerm = null
