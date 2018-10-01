@@ -23,7 +23,7 @@ export default class Rpc {
 
   /**
   */
-  constructor (rpcHandler: RpcHandler, requestor: SimpleSocketWrapper, provider: SimpleSocketWrapper, config: InternalDeepstreamConfig, services: DeepstreamServices,  message: RPCMessage) {
+  constructor (rpcHandler: RpcHandler, requestor: SimpleSocketWrapper, provider: SimpleSocketWrapper, config: InternalDeepstreamConfig, services: DeepstreamServices, message: RPCMessage) {
     this.rpcHandler = rpcHandler
     this.rpcName = message.name
     this.correlationId = message.correlationId
@@ -31,36 +31,30 @@ export default class Rpc {
     this.provider = provider
     this.config = config
     this.services = services
-    const requestorName = this.getRequestorName(requestor)
-    const requestorData = this.getRequestorData(requestor)
-    this.message = Object.assign({}, message, requestorName, requestorData)
+    this.message = Object.assign(message, this.getRequestor(requestor))
     this.isAccepted = false
 
     this.setProvider(provider)
   }
 
-  private getRequestorName (requestor: SimpleSocketWrapper): any {
-    const ret: any = {}
-    if (this.config.provideRPCRequestorDetails || this.config.provideRPCRequestorName) {
-      if (this.config.RPCRequestorNameTerm) {
-        ret[this.config.RPCRequestorNameTerm] = requestor.user
-      } else {
-        ret.requestorName = requestor.user
-      }
+  private getRequestor (requestor: SimpleSocketWrapper): any {
+    const provideAll = (
+      this.config.provideRPCRequestorDetails ||
+      (this.config.provideRPCRequestorName && this.config.provideRPCRequestorData)
+    )
+    switch (true) {
+      case provideAll:
+        return {
+          requestorName: requestor.user,
+          requestorData: requestor.clientData
+        }
+      case this.config.provideRPCRequestorName:
+        return { requestorName: requestor.user }
+      case this.config.provideRPCRequestorData:
+        return { requestorData: requestor.clientData }
+      default:
+        return {}
     }
-    return ret
-  }
-
-  private getRequestorData (requestor: SimpleSocketWrapper): any {
-    const ret: any = {}
-    if (this.config.provideRPCRequestorDetails || this.config.provideRPCRequestorData) {
-      if (this.config.RPCRequestorDataTerm) {
-        ret[this.config.RPCRequestorDataTerm] = requestor.clientData
-      } else {
-        ret.requestorData = requestor.clientData
-      }
-    }
-    return ret
   }
 
   /**
@@ -85,7 +79,7 @@ export default class Rpc {
       this.handleAccept(message)
     } else if (message.action === RPC_ACTIONS.REJECT) {
       this.reroute()
-    } else if (message.action === RPC_ACTIONS.RESPONSE || message.action ===  RPC_ACTIONS.REQUEST_ERROR) {
+    } else if (message.action === RPC_ACTIONS.RESPONSE || message.action === RPC_ACTIONS.REQUEST_ERROR) {
       this.requestor.sendMessage(message)
       this.destroy()
     }

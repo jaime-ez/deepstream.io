@@ -131,16 +131,6 @@ export function get(): InternalDeepstreamConfig {
      */
     provideRPCRequestorData: true,
 
-    /**
-     * The term used for requestorName, defaults to null making it 'requestorName'
-     */
-    RPCRequestorNameTerm: null,
-
-    /**
-     * The term used for requestorData, defaults to null making it 'requestorData'
-     */
-    RPCRequestorDataTerm: null,
-
     /*
      * Timeouts
      */

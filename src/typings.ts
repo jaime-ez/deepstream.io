@@ -212,8 +212,6 @@ interface InternalDeepstreamConfig {
   provideRPCRequestorDetails: boolean
   provideRPCRequestorName: boolean
   provideRPCRequestorData: boolean
-  RPCRequestorNameTerm: string | null
-  RPCRequestorDataTerm: string | null
   rpcAckTimeout: number
   rpcTimeout: number
   cacheRetrievalTimeout: number
