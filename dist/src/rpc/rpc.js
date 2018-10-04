@@ -18,9 +18,26 @@ class Rpc {
         this.provider = provider;
         this.config = config;
         this.services = services;
-        this.message = message;
+        this.message = Object.assign(message, this.getRequestor(requestor));
         this.isAccepted = false;
         this.setProvider(provider);
+    }
+    getRequestor(requestor) {
+        const provideAll = (this.config.provideRPCRequestorDetails ||
+            (this.config.provideRPCRequestorName && this.config.provideRPCRequestorData));
+        switch (true) {
+            case provideAll:
+                return {
+                    requestorName: requestor.user,
+                    requestorData: requestor.clientData
+                };
+            case this.config.provideRPCRequestorName:
+                return { requestorName: requestor.user };
+            case this.config.provideRPCRequestorData:
+                return { requestorData: requestor.clientData };
+            default:
+                return {};
+        }
     }
     /**
     * Processor for incoming messages from the RPC provider. The

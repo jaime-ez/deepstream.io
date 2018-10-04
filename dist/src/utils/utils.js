@@ -177,4 +177,21 @@ exports.isExcluded = function (exclusionPrefixes, recordName) {
     }
     return false;
 };
+/**
+ * Partition a collection into two different arrays depending on if they pass a predicate
+ */
+function partition(collection, predicate) {
+    const passed = [];
+    const failed = [];
+    for (const item of collection) {
+        if (predicate(item)) {
+            passed.push(item);
+        }
+        else {
+            failed.push(item);
+        }
+    }
+    return [passed, failed];
+}
+exports.partition = partition;
 //# sourceMappingURL=utils.js.map

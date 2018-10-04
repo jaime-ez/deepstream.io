@@ -97,6 +97,20 @@ function get() {
          * Listening
          */
         shuffleListenProviders: true,
+        /**
+         * RPC
+         */
+        provideRPCRequestorDetails: true,
+        /**
+         * Send requestorName by default.
+         * Overriden by provideRPCRequestorDetails
+         */
+        provideRPCRequestorName: true,
+        /**
+         * Send requestorData by default.
+         * Overriden by provideRPCRequestorDetails
+         */
+        provideRPCRequestorData: true,
         /*
          * Timeouts
          */

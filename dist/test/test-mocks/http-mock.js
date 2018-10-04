@@ -29,8 +29,8 @@ class HttpServerMock extends events_1.EventEmitter {
     }
     address() {
         return {
-            address: this.host,
-            port: this.port
+            address: this.host || 'localhost',
+            port: this.port || 8080
         };
     }
     _simulateUpgrade(socket) {

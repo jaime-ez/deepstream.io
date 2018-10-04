@@ -1,13 +1,69 @@
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const sinon = require('sinon');
+const M = require('./messages');
+const C = require("../../src/constants");
+const test_mocks_1 = require("../test-helper/test-mocks");
+const testHelper = require('../test-helper/test-helper');
+const RecordTransition = require('../../src/record/record-transition').default;
+describe('RecordTransition', () => {
+    let services;
+    let config;
+    // let socketWrapper
+    let recordTransition;
+    let testMocks;
+    let client;
+    beforeEach(() => {
+        testMocks = test_mocks_1.getTestMocks();
+        client = testMocks.getSocketWrapper();
+        const options = testHelper.getDeepstreamOptions();
+        services = options.services;
+        config = options.config;
+        recordTransition = new RecordTransition(M.recordUpdate.name, config, services, testMocks.recordHandler);
+    });
+    afterEach(() => {
+        client.socketWrapperMock.verify();
+        testMocks.recordHandlerMock.verify();
+    });
+    it('sends write acknowledgement with sync cache and async storage', () => __awaiter(this, void 0, void 0, function* () {
+        const message = {
+            topic: C.TOPIC.RECORD,
+            action: C.RECORD_ACTIONS.UPDATE,
+            name: 'random-name',
+            correlationId: '30',
+            data: 'somedata',
+            isWriteAck: true,
+            version: -1,
+            parsedData: { name: 'somedata' }
+        };
+        const messageCopy = Object.assign({}, message);
+        services.storage.nextOperationWillBeSuccessful = true;
+        services.storage.nextOperationWillBeSynchronous = false;
+        services.cache.nextOperationWillBeSuccessful = true;
+        services.cache.nextOperationWillBeSynchronous = true;
+        client.socketWrapperMock
+            .expects('sendMessage')
+            .once()
+            .withExactArgs({
+            topic: C.TOPIC.RECORD,
+            action: C.RECORD_ACTIONS.WRITE_ACKNOWLEDGEMENT,
+            name: message.name,
+            correlationId: message.correlationId
+        });
+        recordTransition.add(client.socketWrapper, message, true);
+        // Wait for the async callback to fire
+        yield new Promise((resolve, reject) => setTimeout(resolve, 60));
+    }));
+});
 /*
-const sinon = require('sinon')
-
-const M = require('./messages')
-import * as C from '../../src/constants'
-import { getTestMocks } from '../test-helper/test-mocks'
-const testHelper = require('../test-helper/test-helper')
-
-const RecordTransition = require('../../src/record/record-transition').default
-
 xdescribe('record transitions', () => {
   let services
   let config

@@ -33,12 +33,13 @@ exports.getTestMocks = () => {
     const listenerRegistryMock = sinon.mock(listenerRegistry);
     const stateRegistryMock = sinon.mock(stateRegistry);
     const recordHandlerMock = sinon.mock(recordHandler);
-    function getSocketWrapper(user, authData = {}) {
+    function getSocketWrapper(user, authData = {}, clientData = {}) {
         const socketWrapperEmitter = new events_1.EventEmitter();
         const socketWrapper = {
             authAttempts: 0,
             user,
-            authData: authData || {},
+            authData,
+            clientData,
             prepareMessage: () => { },
             sendPrepared: () => { },
             finalizeMessage: () => { },

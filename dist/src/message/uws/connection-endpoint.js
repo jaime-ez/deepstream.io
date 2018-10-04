@@ -167,13 +167,26 @@ class UWSConnectionEndpoint extends events_1.EventEmitter {
         }
         return '';
     }
+    getServerAddressAndPort() {
+        const serverAddress = this.server.address();
+        if (typeof serverAddress === 'string') {
+            return serverAddress.split(':');
+        }
+        else if (serverAddress.address && serverAddress.port) {
+            return [
+                serverAddress.address,
+                `${serverAddress.port}`
+            ];
+        }
+        else {
+            throw Error(`Could not recognize "${serverAddress}" with type "${typeof serverAddress}" as a server address`);
+        }
+    }
     /**
      * Called for the ready event of the ws server.
      */
     _onReady() {
-        const serverAddress = this.server.address();
-        const address = serverAddress.address;
-        const port = serverAddress.port;
+        const [address, port] = this.getServerAddressAndPort();
         const wsMsg = `Listening for websocket connections on ${address}:${port}${this.urlPath}`;
         this.logger.info(constants_1.EVENT.INFO, wsMsg);
         const hcMsg = `Listening for health checks on path ${this.healthCheckPath} `;
@@ -394,6 +407,7 @@ class UWSConnectionEndpoint extends events_1.EventEmitter {
     _appendDataToSocketWrapper(socketWrapper, userData) {
         socketWrapper.user = userData.username || OPEN;
         socketWrapper.authData = userData.serverData || null;
+        socketWrapper.clientData = userData.clientData || null;
     }
     /**
      * Callback for invalid credentials. Will notify the client
@@ -477,7 +491,12 @@ class UWSConnectionEndpoint extends events_1.EventEmitter {
         if (!this.urlPath || this.urlPath === requestPath) {
             this._handleUpgrade(request, socket);
         }
-        UWSConnectionEndpoint._terminateSocket(socket, 400, 'URL not supported');
+        try {
+            UWSConnectionEndpoint._terminateSocket(socket, 400, 'URL not supported');
+        }
+        catch (e) {
+            // already terminated
+        }
     }
     /**
      * Terminate an HTTP socket with some error code and error message

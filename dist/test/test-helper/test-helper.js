@@ -51,7 +51,8 @@ exports.getDeepstreamOptions = function (serverName) {
                 cacheEvacuationInterval: 60000,
                 maxRuleIterations: 3
             }
-        }
+        },
+        provideRPCRequestorDetails: true
     };
     class PermissionHandler extends events_1.EventEmitter {
         constructor() {

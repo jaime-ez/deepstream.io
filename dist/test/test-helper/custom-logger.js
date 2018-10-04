@@ -14,7 +14,7 @@ class CustomLogger extends events_1.EventEmitter {
     log(level, event, msg) {
         console.log('CustomLogger:', level, event, msg);
     }
-    setLogLevel() {
+    setLogLevel( /* level */) {
     }
 }
 exports.default = CustomLogger;

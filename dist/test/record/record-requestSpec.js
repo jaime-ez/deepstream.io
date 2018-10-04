@@ -11,6 +11,8 @@ describe('record request', () => {
     let client;
     let config;
     let services;
+    const cacheData = { cache: true };
+    const storageData = { storage: true };
     beforeEach(() => {
         const options = testHelper.getDeepstreamOptions();
         services = options.services;
@@ -19,8 +21,8 @@ describe('record request', () => {
             storageRetrievalTimeout: 100,
             storageExclusionPrefixes: ['dont-save']
         });
-        services.cache.set('existingRecord', 1, {}, () => { });
-        services.storage.set('onlyExistsInStorage', 1, {}, () => { });
+        services.cache.set('existingRecord', 1, cacheData, () => { });
+        services.storage.set('onlyExistsInStorage', 1, storageData, () => { });
         testMocks = test_mocks_1.getTestMocks();
         client = testMocks.getSocketWrapper('someUser');
         completeCallback.calls.reset();
@@ -32,29 +34,29 @@ describe('record request', () => {
             recordRequest('existingRecord', config, services, client.socketWrapper, completeCallback, errorCallback, null);
             expect(services.cache.lastRequestedKey).toBe('existingRecord');
             expect(services.storage.lastRequestedKey).toBe(null);
-            expect(completeCallback).toHaveBeenCalledWith('existingRecord', 1, {}, client.socketWrapper);
+            expect(completeCallback).toHaveBeenCalledWith('existingRecord', 1, cacheData, client.socketWrapper);
             expect(errorCallback).not.toHaveBeenCalled();
         });
         it('requests a record that exists in an asynchronous cache', done => {
             services.cache.nextGetWillBeSynchronous = false;
             recordRequest('existingRecord', config, services, client.socketWrapper, completeCallback, errorCallback, null);
             setTimeout(() => {
-                expect(completeCallback).toHaveBeenCalledWith('existingRecord', 1, {}, client.socketWrapper);
+                expect(completeCallback).toHaveBeenCalledWith('existingRecord', 1, cacheData, client.socketWrapper);
                 expect(errorCallback).not.toHaveBeenCalled();
                 expect(services.cache.lastRequestedKey).toBe('existingRecord');
                 expect(services.storage.lastRequestedKey).toBe(null);
                 done();
             }, 30);
         });
-        xit('requests a record that doesn\'t exists in a synchronous cache, but in storage', () => {
+        it('requests a record that doesn\'t exists in a synchronous cache, but in storage', () => {
             services.cache.nextGetWillBeSynchronous = true;
             recordRequest('onlyExistsInStorage', config, services, client.socketWrapper, completeCallback, errorCallback, null);
             expect(services.cache.lastRequestedKey).toBe('onlyExistsInStorage');
             expect(services.storage.lastRequestedKey).toBe('onlyExistsInStorage');
-            expect(completeCallback).toHaveBeenCalledWith('onlyExistsInStorage', 1, {}, client.socketWrapper);
+            expect(completeCallback).toHaveBeenCalledWith('onlyExistsInStorage', 1, storageData, client.socketWrapper);
             expect(errorCallback).not.toHaveBeenCalled();
         });
-        xit('requests a record that doesn\'t exists in an asynchronous cache, but in asynchronous storage', done => {
+        it('requests a record that doesn\'t exists in an asynchronous cache, but in asynchronous storage', done => {
             services.cache.nextGetWillBeSynchronous = false;
             services.storage.nextGetWillBeSynchronous = false;
             recordRequest('onlyExistsInStorage', config, services, client.socketWrapper, completeCallback, errorCallback, null);
@@ -62,7 +64,7 @@ describe('record request', () => {
                 expect(services.cache.lastRequestedKey).toBe('onlyExistsInStorage');
                 expect(services.storage.lastRequestedKey).toBe('onlyExistsInStorage');
                 expect(errorCallback).not.toHaveBeenCalled();
-                expect(completeCallback).toHaveBeenCalledWith('onlyExistsInStorage', 1, {}, client.socketWrapper);
+                expect(completeCallback).toHaveBeenCalledWith('onlyExistsInStorage', 1, storageData, client.socketWrapper);
                 done();
             }, 75);
         });

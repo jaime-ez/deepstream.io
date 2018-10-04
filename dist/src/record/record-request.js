@@ -60,7 +60,7 @@ function onCacheResponse(error, recordName, version, data, socketWrapper, onComp
         services.storage.get(recordName, (storageError, version, result) => {
             if (!storageTimedOut) {
                 clearTimeout(storageTimeout);
-                onStorageResponse(storageError, recordName, version, data, socketWrapper, onComplete, onError, services, context, metaData, message);
+                onStorageResponse(storageError, recordName, version, result, socketWrapper, onComplete, onError, services, context, metaData, message);
             }
         }, metaData);
     }

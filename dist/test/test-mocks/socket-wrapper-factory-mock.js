@@ -15,7 +15,7 @@ const SocketWrapperMock = class extends events_1.EventEmitter {
         SocketWrapperMock.lastPreparedMessage = message;
         return message;
     }
-    sendPrepared() {
+    sendPrepared( /* preparedMessage */) {
     }
     finalizeMessage() {
     }
@@ -28,7 +28,7 @@ const SocketWrapperMock = class extends events_1.EventEmitter {
     getHandshakeData() {
         return this.handshakeData;
     }
-    sendError() {
+    sendError( /* topic, type, msg */) {
     }
     sendMessage(message) {
         this.lastSendMessage = message;
@@ -45,7 +45,7 @@ const SocketWrapperMock = class extends events_1.EventEmitter {
             return e;
         }
     }
-    send() {
+    send( /* message */) {
     }
     destroy() {
         this.authCallBack = null;

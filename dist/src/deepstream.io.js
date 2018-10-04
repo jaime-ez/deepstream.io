@@ -7,7 +7,8 @@ const path_1 = require("path");
 const events_1 = require("events");
 const pkg = require("../package.json");
 const utils_1 = require("./utils/utils");
-const constants_1 = require("./constants");
+const constants_ = require("./constants");
+const { STATES, EVENT, TOPIC, ACTIONS } = constants_;
 const message_processor_1 = require("./message/message-processor");
 const message_distributor_1 = require("./message/message-distributor");
 const event_handler_1 = require("./event/event-handler");
@@ -25,6 +26,7 @@ const dependency_initialiser_1 = require("./utils/dependency-initialiser");
  * Sets the name of the process
  */
 process.title = 'deepstream server';
+exports.constants = constants_;
 class Deepstream extends events_1.EventEmitter {
     /**
      * Deepstream is a realtime data server that supports data-sync,
@@ -42,22 +44,22 @@ class Deepstream extends events_1.EventEmitter {
         this.messageProcessor = null;
         this.messageDistributor = null;
         this.stateMachine = {
-            init: constants_1.STATES.STOPPED,
+            init: STATES.STOPPED,
             transitions: [
-                { name: 'start', from: constants_1.STATES.STOPPED, to: constants_1.STATES.LOGGER_INIT, handler: this.loggerInit },
-                { name: 'logger-started', from: constants_1.STATES.LOGGER_INIT, to: constants_1.STATES.PLUGIN_INIT, handler: this.pluginInit },
-                { name: 'plugins-started', from: constants_1.STATES.PLUGIN_INIT, to: constants_1.STATES.SERVICE_INIT, handler: this.serviceInit },
-                { name: 'services-started', from: constants_1.STATES.SERVICE_INIT, to: constants_1.STATES.CONNECTION_ENDPOINT_INIT, handler: this.connectionEndpointInit },
-                { name: 'connection-endpoints-started', from: constants_1.STATES.CONNECTION_ENDPOINT_INIT, to: constants_1.STATES.RUNNING, handler: this.run },
-                { name: 'stop', from: constants_1.STATES.LOGGER_INIT, to: constants_1.STATES.LOGGER_SHUTDOWN, handler: this.loggerShutdown },
-                { name: 'stop', from: constants_1.STATES.PLUGIN_INIT, to: constants_1.STATES.PLUGIN_SHUTDOWN, handler: this.pluginShutdown },
-                { name: 'stop', from: constants_1.STATES.SERVICE_INIT, to: constants_1.STATES.SERVICE_SHUTDOWN, handler: this.serviceShutdown },
-                { name: 'stop', from: constants_1.STATES.CONNECTION_ENDPOINT_INIT, to: constants_1.STATES.CONNECTION_ENDPOINT_SHUTDOWN, handler: this.connectionEndpointShutdown },
-                { name: 'stop', from: constants_1.STATES.RUNNING, to: constants_1.STATES.CONNECTION_ENDPOINT_SHUTDOWN, handler: this.connectionEndpointShutdown },
-                { name: 'connection-endpoints-closed', from: constants_1.STATES.CONNECTION_ENDPOINT_SHUTDOWN, to: constants_1.STATES.SERVICE_SHUTDOWN, handler: this.serviceShutdown },
-                { name: 'services-closed', from: constants_1.STATES.SERVICE_SHUTDOWN, to: constants_1.STATES.PLUGIN_SHUTDOWN, handler: this.pluginShutdown },
-                { name: 'plugins-closed', from: constants_1.STATES.PLUGIN_SHUTDOWN, to: constants_1.STATES.LOGGER_SHUTDOWN, handler: this.loggerShutdown },
-                { name: 'logger-closed', from: constants_1.STATES.LOGGER_SHUTDOWN, to: constants_1.STATES.STOPPED, handler: this.stopped },
+                { name: 'start', from: STATES.STOPPED, to: STATES.LOGGER_INIT, handler: this.loggerInit },
+                { name: 'logger-started', from: STATES.LOGGER_INIT, to: STATES.PLUGIN_INIT, handler: this.pluginInit },
+                { name: 'plugins-started', from: STATES.PLUGIN_INIT, to: STATES.SERVICE_INIT, handler: this.serviceInit },
+                { name: 'services-started', from: STATES.SERVICE_INIT, to: STATES.CONNECTION_ENDPOINT_INIT, handler: this.connectionEndpointInit },
+                { name: 'connection-endpoints-started', from: STATES.CONNECTION_ENDPOINT_INIT, to: STATES.RUNNING, handler: this.run },
+                { name: 'stop', from: STATES.LOGGER_INIT, to: STATES.LOGGER_SHUTDOWN, handler: this.loggerShutdown },
+                { name: 'stop', from: STATES.PLUGIN_INIT, to: STATES.PLUGIN_SHUTDOWN, handler: this.pluginShutdown },
+                { name: 'stop', from: STATES.SERVICE_INIT, to: STATES.SERVICE_SHUTDOWN, handler: this.serviceShutdown },
+                { name: 'stop', from: STATES.CONNECTION_ENDPOINT_INIT, to: STATES.CONNECTION_ENDPOINT_SHUTDOWN, handler: this.connectionEndpointShutdown },
+                { name: 'stop', from: STATES.RUNNING, to: STATES.CONNECTION_ENDPOINT_SHUTDOWN, handler: this.connectionEndpointShutdown },
+                { name: 'connection-endpoints-closed', from: STATES.CONNECTION_ENDPOINT_SHUTDOWN, to: STATES.SERVICE_SHUTDOWN, handler: this.serviceShutdown },
+                { name: 'services-closed', from: STATES.SERVICE_SHUTDOWN, to: STATES.PLUGIN_SHUTDOWN, handler: this.pluginShutdown },
+                { name: 'plugins-closed', from: STATES.PLUGIN_SHUTDOWN, to: STATES.LOGGER_SHUTDOWN, handler: this.loggerShutdown },
+                { name: 'logger-closed', from: STATES.LOGGER_SHUTDOWN, to: STATES.STOPPED, handler: this.stopped },
             ]
         };
         this.currentState = this.stateMachine.init;
@@ -69,6 +71,11 @@ class Deepstream extends events_1.EventEmitter {
     set(key, value) {
         if (this.services[key] !== undefined) {
             this.services[key] = value;
+            if (key === 'storage' || key === 'cache') {
+                if (this.services[key].apiVersion !== 2) {
+                    configInitialiser.storageCompatability(this.services[key]);
+                }
+            }
         }
         else if (this.config[key] !== undefined) {
             this.config[key] = value;
@@ -82,7 +89,7 @@ class Deepstream extends events_1.EventEmitter {
      * Returns true if the deepstream server is running, otherwise false
      */
     isRunning() {
-        return this.currentState === constants_1.STATES.RUNNING;
+        return this.currentState === STATES.RUNNING;
     }
     /**
      * Starts up deepstream. The startup process has three steps:
@@ -93,7 +100,7 @@ class Deepstream extends events_1.EventEmitter {
      * - Start WS server
      */
     start() {
-        if (this.currentState !== constants_1.STATES.STOPPED) {
+        if (this.currentState !== STATES.STOPPED) {
             throw new Error(`Server can only start after it stops successfully. Current state: ${this.currentState}`);
         }
         this.showStartLogo();
@@ -104,7 +111,7 @@ class Deepstream extends events_1.EventEmitter {
      * but all clients have to reconnect. Will emit a 'stopped' event once done
      */
     stop() {
-        if (this.currentState === constants_1.STATES.STOPPED) {
+        if (this.currentState === STATES.STOPPED) {
             throw new Error('The server is already stopped.');
         }
         this.transition('stop');
@@ -136,7 +143,7 @@ class Deepstream extends events_1.EventEmitter {
     onTransition(transition) {
         const logger = this.services.logger;
         if (logger) {
-            logger.debug(constants_1.EVENT.INFO, `State transition (${transition.name}): ${constants_1.STATES[transition.from]} -> ${constants_1.STATES[transition.to]}`);
+            logger.debug(EVENT.INFO, `State transition (${transition.name}): ${STATES[transition.from]} -> ${STATES[transition.to]}`);
         }
     }
     /**
@@ -157,7 +164,7 @@ class Deepstream extends events_1.EventEmitter {
      */
     pluginInit() {
         this.services.message = new cluster_node_1.default(this.config, this.services, 'deepstream');
-        const infoLogger = message => this.services.logger.info(constants_1.EVENT.INFO, message);
+        const infoLogger = message => this.services.logger.info(EVENT.INFO, message);
         infoLogger(`server name: ${this.config.serverName}`);
         infoLogger(`deepstream version: ${pkg.version}`);
         // otherwise (no configFile) deepstream was invoked by API
@@ -186,7 +193,7 @@ class Deepstream extends events_1.EventEmitter {
         }
         plugin.isReady = true;
         const allPluginsReady = this.services.registeredPlugins.every(type => this.services[type].isReady);
-        if (allPluginsReady && this.currentState === constants_1.STATES.PLUGIN_INIT) {
+        if (allPluginsReady && this.currentState === STATES.PLUGIN_INIT) {
             this.transition('plugins-started');
         }
     }
@@ -199,13 +206,13 @@ class Deepstream extends events_1.EventEmitter {
         this.messageDistributor = new message_distributor_1.default(this.config, this.services);
         this.services.uniqueRegistry = new lock_registry_1.default(this.config, this.services);
         this.eventHandler = new event_handler_1.default(this.config, this.services);
-        this.messageDistributor.registerForTopic(constants_1.TOPIC.EVENT, this.eventHandler.handle.bind(this.eventHandler));
+        this.messageDistributor.registerForTopic(TOPIC.EVENT, this.eventHandler.handle.bind(this.eventHandler));
         this.rpcHandler = new rpc_handler_1.default(this.config, this.services);
-        this.messageDistributor.registerForTopic(constants_1.TOPIC.RPC, this.rpcHandler.handle.bind(this.rpcHandler));
+        this.messageDistributor.registerForTopic(TOPIC.RPC, this.rpcHandler.handle.bind(this.rpcHandler));
         this.recordHandler = new record_handler_1.default(this.config, this.services);
-        this.messageDistributor.registerForTopic(constants_1.TOPIC.RECORD, this.recordHandler.handle.bind(this.recordHandler));
+        this.messageDistributor.registerForTopic(TOPIC.RECORD, this.recordHandler.handle.bind(this.recordHandler));
         this.presenceHandler = new presence_handler_1.default(this.config, this.services);
-        this.messageDistributor.registerForTopic(constants_1.TOPIC.PRESENCE, this.presenceHandler.handle.bind(this.presenceHandler));
+        this.messageDistributor.registerForTopic(TOPIC.PRESENCE, this.presenceHandler.handle.bind(this.presenceHandler));
         this.messageProcessor.onAuthenticatedMessage =
             this.messageDistributor.distribute.bind(this.messageDistributor);
         if (this.services.permissionHandler.setRecordHandler) {
@@ -233,7 +240,7 @@ class Deepstream extends events_1.EventEmitter {
      * Initialization complete - Deepstream is up and running.
      */
     run() {
-        this.services.logger.info(constants_1.EVENT.INFO, 'Deepstream started');
+        this.services.logger.info(EVENT.INFO, 'Deepstream started');
         this.emit('started');
     }
     /**
@@ -338,7 +345,7 @@ class Deepstream extends events_1.EventEmitter {
      */
     onPluginError(pluginName, error) {
         const msg = `Error from ${pluginName} plugin: ${error.toString()}`;
-        this.services.logger.error(constants_1.EVENT.PLUGIN_ERROR, msg);
+        this.services.logger.error(EVENT.PLUGIN_ERROR, msg);
     }
 }
 exports.Deepstream = Deepstream;

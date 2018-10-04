@@ -13,6 +13,7 @@ class HTTPSocketWrapper extends events_1.EventEmitter {
     }
     init(authResponseData, messageIndex, messageResults, responseCallback, requestTimeoutId) {
         this.user = authResponseData.userId || authResponseData.username || 'OPEN';
+        this.clientData = authResponseData.clientData;
         this.authData = authResponseData.serverData;
         this._correlationIndex = messageIndex;
         this._messageResults = messageResults;

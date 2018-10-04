@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const constants_1 = require("../constants");
+const utils_1 = require("./utils");
 let idCounter = 0;
 class SubscriptionRegistry {
     /**
@@ -94,11 +95,11 @@ class SubscriptionRegistry {
         return this.clusterSubscriptions.has(subscriptionName);
     }
     /**
-    * This method allows you to customise the SubscriptionRegistry so that it can send
-    * custom events and ack messages back.
-    * For example, when using the ACTIONS.LISTEN, you would override SUBSCRIBE with
-    * ACTIONS.SUBSCRIBE and UNSUBSCRIBE with UNSUBSCRIBE
-    */
+     * This method allows you to customise the SubscriptionRegistry so that it can send
+     * custom events and ack messages back.
+     * For example, when using the ACTIONS.LISTEN, you would override SUBSCRIBE with
+     * ACTIONS.SUBSCRIBE and UNSUBSCRIBE with UNSUBSCRIBE
+     */
     setAction(name, value) {
         this.constants[name.toUpperCase()] = value;
     }
@@ -116,17 +117,23 @@ class SubscriptionRegistry {
         if (!subscription) {
             return;
         }
-        const subscribers = subscription.sockets;
-        const first = subscribers.values().next().value;
-        const msg = first.getMessage(message);
-        const preparedMessage = first.prepareMessage(msg);
-        for (const sock of subscribers) {
-            if (sock === socket) {
-                continue;
+        const isOpenSocket = (sock) => !sock.isClosed;
+        const [subscribersUncast, closedSocketsUncast] = utils_1.partition(subscription.sockets, isOpenSocket);
+        const subscribers = subscribersUncast;
+        const closedSockets = closedSocketsUncast;
+        if (subscribers.length) {
+            const first = subscribers[0];
+            const msg = first.getMessage(message);
+            const preparedMessage = first.prepareMessage(msg);
+            for (const sock of subscribers) {
+                if (sock === socket) {
+                    continue;
+                }
+                sock.sendPrepared(preparedMessage);
             }
-            sock.sendPrepared(preparedMessage);
+            first.finalizeMessage(preparedMessage);
         }
-        first.finalizeMessage(preparedMessage);
+        closedSockets.map(sock => this.onSocketClose(sock));
         return;
         // const msgString = getMessage(message, false)
         // if (subscription.sharedMessages.length === 0) {
@@ -276,10 +283,15 @@ class SubscriptionRegistry {
         else {
             // log error
         }
+        // There is a special case for the last socket that is not deleted from
+        // `this.sockets` correctly in onSocketClose.
+        if (subscription.sockets.size === 0) {
+            this.sockets.delete(socket);
+        }
     }
     /**
-    * Called whenever a socket closes to remove all of its subscriptions
-    */
+     * Called whenever a socket closes to remove all of its subscriptions
+     */
     onSocketClose(socket) {
         const subscriptions = this.sockets.get(socket);
         if (!subscriptions) {
@@ -290,6 +302,7 @@ class SubscriptionRegistry {
             subscription.sockets.delete(socket);
             this.removeSocket(subscription, socket);
         }
+        this.sockets.delete(socket);
     }
     /**
      * Broadcasts the enqueued messages for the timed out subscription room.
