@@ -340,7 +340,7 @@ export function storageCompatability (storage: StoragePlugin) {
   const oldGet = storage.get as Function
   storage.get = (recordName: string, callback: StorageReadCallback) => {
     oldGet.call(storage, recordName, (error, record) => {
-      callback(error, record ? record._v : -1, record ? record._d : record)
+      callback(error, record ? record._v : -1, record ? record._d : null)
     })
   }
 

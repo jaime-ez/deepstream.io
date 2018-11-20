@@ -317,7 +317,7 @@ function storageCompatability(storage) {
     const oldGet = storage.get;
     storage.get = (recordName, callback) => {
         oldGet.call(storage, recordName, (error, record) => {
-            callback(error, record ? record._v : -1, record ? record._d : record);
+            callback(error, record ? record._v : -1, record ? record._d : null);
         });
     };
     const oldSet = storage.set;
