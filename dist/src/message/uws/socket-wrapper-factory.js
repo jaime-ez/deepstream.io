@@ -34,11 +34,16 @@ class UwsSocketWrapper extends events_1.EventEmitter {
         this.bufferedWrites = '';
         this.setMaxListeners(0);
     }
+    get isOpen() {
+        return this.isClosed === true;
+    }
     /**
      * Updates lastPreparedMessage and returns the [uws] prepared message.
      */
     prepareMessage(message) {
-        UwsSocketWrapper.lastPreparedMessage = uws.native.server.prepareMessage(message, uws.OPCODE_BINARY);
+        if (this.isOpen) {
+            UwsSocketWrapper.lastPreparedMessage = uws.native.server.prepareMessage(message, uws.OPCODE_BINARY);
+        }
         return UwsSocketWrapper.lastPreparedMessage;
     }
     /**
@@ -47,32 +52,25 @@ class UwsSocketWrapper extends events_1.EventEmitter {
      */
     sendPrepared(preparedMessage) {
         this.flush();
-        uws.native.server.sendPrepared(this.external, preparedMessage);
+        if (this.isOpen) {
+            uws.native.server.sendPrepared(this.external, preparedMessage);
+        }
     }
     /**
      * Finalizes the [uws] prepared message.
      */
     finalizeMessage(preparedMessage) {
-        uws.native.server.finalizeMessage(preparedMessage);
+        if (this.isOpen) {
+            uws.native.server.finalizeMessage(preparedMessage);
+        }
     }
     /**
      * Variant of send with no particular checks or appends of message.
      */
     sendNative(message, allowBuffering) {
-        uws.native.server.send(this.external, message, uws.OPCODE_BINARY);
-        /*
-         *if (this.config.outgoingBufferTimeout === 0) {
-         *  uws.native.server.send(this.external, message, uws.OPCODE_TEXT)
-         *} else if (!allowBuffering) {
-         *  this.flush()
-         *  uws.native.server.send(this.external, message, uws.OPCODE_TEXT)
-         *} else {
-         *  this.bufferedWrites += message
-         *  if (this.connectionEndpoint.scheduleFlush) {
-         *    this.connectionEndpoint.scheduleFlush(this)
-         *  }
-         *}
-         */
+        if (this.isOpen) {
+            uws.native.server.send(this.external, message, uws.OPCODE_BINARY);
+        }
     }
     /**
      * Called by the connection endpoint to flush all buffered writes.
@@ -80,7 +78,7 @@ class UwsSocketWrapper extends events_1.EventEmitter {
      * and can wait to be bundled into another message if necessary
      */
     flush() {
-        if (this.bufferedWrites !== '') {
+        if (this.bufferedWrites !== '' && this.isOpen) {
             uws.native.server.send(this.external, this.bufferedWrites, uws.OPCODE_BINARY);
             this.bufferedWrites = '';
         }
@@ -91,7 +89,7 @@ class UwsSocketWrapper extends events_1.EventEmitter {
      *                                 this message type
      */
     sendMessage(message, allowBuffering) {
-        if (this.isClosed === false) {
+        if (this.isOpen) {
             this.sendNative(binaryMessageBuilder.getMessage(message, false), allowBuffering);
         }
     }
@@ -121,7 +119,7 @@ class UwsSocketWrapper extends events_1.EventEmitter {
      *                                 this message type
      */
     sendAckMessage(message, allowBuffering) {
-        if (this.isClosed === false) {
+        if (this.isOpen) {
             this.sendNative(binaryMessageBuilder.getMessage(message, true), allowBuffering);
         }
     }
@@ -135,6 +133,7 @@ class UwsSocketWrapper extends events_1.EventEmitter {
      * logic and closes the connection
      */
     destroy() {
+        // Not sure if this should only happen on closed sockets or not
         uws.native.server.terminate(this.external);
     }
     close() {
