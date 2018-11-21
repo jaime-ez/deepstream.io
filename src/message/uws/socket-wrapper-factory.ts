@@ -48,7 +48,7 @@ export class UwsSocketWrapper extends EventEmitter implements SocketWrapper {
   }
 
   get isOpen() {
-    return this.isClosed === true
+    return this.isClosed !== true
   }
 
   /**

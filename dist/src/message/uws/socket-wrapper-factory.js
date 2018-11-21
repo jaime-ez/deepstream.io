@@ -35,7 +35,7 @@ class UwsSocketWrapper extends events_1.EventEmitter {
         this.setMaxListeners(0);
     }
     get isOpen() {
-        return this.isClosed === true;
+        return this.isClosed !== true;
     }
     /**
      * Updates lastPreparedMessage and returns the [uws] prepared message.
