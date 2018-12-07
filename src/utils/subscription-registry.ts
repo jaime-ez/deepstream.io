@@ -270,7 +270,7 @@ export default class SubscriptionRegistry {
         socket.sendMessage({
           topic: this.topic,
           action: this.constants.NOT_SUBSCRIBED,
-          originalAction: message.action,
+          // originalAction: message.action, originalAction not allowed on NOT_SUBSCRIBED
           name
         })
       }
