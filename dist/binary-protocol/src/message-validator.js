@@ -239,7 +239,7 @@ function validateMeta(topic, action, meta) {
         if (meta[key] !== undefined
             && required.indexOf(key) === -1
             && optional.indexOf(key) === -1) {
-            return `meta object has unknown key ${key}`;
+            return `meta object [topic:${topic},action:${action}] has unknown key ${key}`;
         }
     }
     for (const req of required) {
