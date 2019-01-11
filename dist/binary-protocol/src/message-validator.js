@@ -42,7 +42,7 @@ exports.META_PARAMS_SPEC = {
         [message_constants_1.RECORD_ACTIONS.SUBSCRIBE_ACK]: [[message_constants_1.META_KEYS.name], []],
         [message_constants_1.RECORD_ACTIONS.UNSUBSCRIBE]: [[message_constants_1.META_KEYS.name], []],
         [message_constants_1.RECORD_ACTIONS.UNSUBSCRIBE_ACK]: [[message_constants_1.META_KEYS.name], []],
-        [message_constants_1.RECORD_ACTIONS.MULTIPLE_SUBSCRIPTIONS]: [[message_constants_1.META_KEYS.name], []],
+        [message_constants_1.RECORD_ACTIONS.MULTIPLE_SUBSCRIPTIONS]: [[message_constants_1.META_KEYS.name], [message_constants_1.META_KEYS.originalAction]],
         [message_constants_1.RECORD_ACTIONS.NOT_SUBSCRIBED]: [[message_constants_1.META_KEYS.name], []],
         [message_constants_1.RECORD_ACTIONS.HEAD]: [[message_constants_1.META_KEYS.name], []],
         [message_constants_1.RECORD_ACTIONS.SUBSCRIBEANDHEAD]: [[message_constants_1.META_KEYS.name], []],
@@ -239,7 +239,7 @@ function validateMeta(topic, action, meta) {
         if (meta[key] !== undefined
             && required.indexOf(key) === -1
             && optional.indexOf(key) === -1) {
-            return `meta object [topic:${topic},action:${action}] has unknown key ${key}`;
+            return `meta object has unknown key ${key}`;
         }
     }
     for (const req of required) {
