@@ -328,7 +328,7 @@ export default class RecordHandler {
     this.permissionAction(RA.READ, message, message.action, socketWrapper, () => {
       this.subscriptionRegistry.subscribe(Object.assign({}, message, { action: RA.SUBSCRIBE }), socketWrapper)
 
-      this.recordRequest(message.name, socketWrapper, (latestData: any, newVersion: number) => {
+      this.recordRequest(message.name, socketWrapper, (_: string, newVersion: number, latestData: any) => {
         const infoLogger = msg => this.services.logger.info(EVENT.INFO, msg)
         if (latestData) {
           if (newVersion !== version) {
@@ -339,6 +339,8 @@ export default class RecordHandler {
         } else {
           infoLogger(`BUG? ${message.name} was version ${version} for readAndSubscribe, ` +
                      'but was removed during permission check')
+          onRequestError(message.action, `"${message.name}" was removed during permission check`,
+                         message.name, socketWrapper, message)
         }
       }, onRequestError, message)
     })
