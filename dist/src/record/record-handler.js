@@ -7,6 +7,7 @@ const record_deletion_1 = require("./record-deletion");
 const record_request_1 = require("./record-request");
 const record_transition_1 = require("./record-transition");
 const utils_1 = require("../utils/utils");
+const message_constants_1 = require("../../binary-protocol/src/message-constants");
 const WRITE_ACK_TO_ACTION = {
     [constants_1.RECORD_ACTIONS.CREATEANDPATCH_WITH_WRITE_ACK]: constants_1.RECORD_ACTIONS.CREATEANDPATCH,
     [constants_1.RECORD_ACTIONS.CREATEANDUPDATE_WITH_WRITE_ACK]: constants_1.RECORD_ACTIONS.CREATEANDUPDATE,
@@ -287,7 +288,20 @@ class RecordHandler {
     readAndSubscribe(message, version, data, socketWrapper) {
         this.permissionAction(constants_1.RECORD_ACTIONS.READ, message, message.action, socketWrapper, () => {
             this.subscriptionRegistry.subscribe(Object.assign({}, message, { action: constants_1.RECORD_ACTIONS.SUBSCRIBE }), socketWrapper);
-            sendRecord(message.name, version, data, socketWrapper);
+            this.recordRequest(message.name, socketWrapper, (latestData, newVersion) => {
+                const infoLogger = msg => this.services.logger.info(message_constants_1.EVENT.INFO, msg);
+                if (latestData) {
+                    if (newVersion !== version) {
+                        infoLogger(`BUG CAUGHT! ${message.name} was version ${version} for readAndSubscribe, ` +
+                            `but updated during permission to ${message.version}`);
+                    }
+                    sendRecord(message.name, version, latestData, socketWrapper);
+                }
+                else {
+                    infoLogger(`BUG? ${message.name} was version ${version} for readAndSubscribe, ` +
+                        'but was removed during permission check');
+                }
+            }, onRequestError, message);
         });
     }
     /**

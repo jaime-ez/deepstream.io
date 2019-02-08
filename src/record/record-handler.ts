@@ -13,6 +13,7 @@ import RecordDeletion from './record-deletion'
 import { recordRequestBinding } from './record-request'
 import RecordTransition from './record-transition'
 import { isExcluded } from '../utils/utils'
+import { EVENT } from '../../binary-protocol/src/message-constants'
 
 const WRITE_ACK_TO_ACTION: { [key: number]: RA } = {
   [RA.CREATEANDPATCH_WITH_WRITE_ACK]: RA.CREATEANDPATCH,
@@ -326,7 +327,20 @@ export default class RecordHandler {
   private readAndSubscribe (message: RecordMessage, version: number, data: any, socketWrapper: SocketWrapper): void {
     this.permissionAction(RA.READ, message, message.action, socketWrapper, () => {
       this.subscriptionRegistry.subscribe(Object.assign({}, message, { action: RA.SUBSCRIBE }), socketWrapper)
-      sendRecord(message.name, version, data, socketWrapper)
+
+      this.recordRequest(message.name, socketWrapper, (latestData: any, newVersion: number) => {
+        const infoLogger = msg => this.services.logger.info(EVENT.INFO, msg)
+        if (latestData) {
+          if (newVersion !== version) {
+            infoLogger(`BUG CAUGHT! ${message.name} was version ${version} for readAndSubscribe, ` +
+                       `but updated during permission to ${message.version}`)
+          }
+          sendRecord(message.name, version, latestData, socketWrapper)
+        } else {
+          infoLogger(`BUG? ${message.name} was version ${version} for readAndSubscribe, ` +
+                     'but was removed during permission check')
+        }
+      }, onRequestError, message)
     })
   }
 
