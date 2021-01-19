@@ -10,21 +10,21 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
     - name: Checkout submodules
-    - run: git submodule update --init --recursive
+      uses: actions/checkout@v2
+      run: git submodule update --init --recursive
     - name: Use Node.js 
       env:
         DEFAULT_DELAY: 50
       uses: actions/setup-node@v1
       with:
         node-version: '12.x'
-    - run: npm install
-    - run: npm run lint
-    - run: npm run test:all:coverage
-    - run: npm run e2e:uws
-    - run: bash ./scripts/package.sh true true
-    - run: npm run tsc
+      run: npm install
+      run: npm run lint
+      run: npm run test:all:coverage
+      run: npm run e2e:uws
+      run: bash ./scripts/package.sh true true
+      run: npm run tsc
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -48,19 +48,19 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
     - name: Checkout submodules
-    - run: git submodule update --init --recursive
+      uses: actions/checkout@v2
+      run: git submodule update --init --recursive
     - name: Use Node.js 
       env:
         DEFAULT_DELAY: 50
       uses: actions/setup-node@v1
       with:
         node-version: '12.x'
-    - run: npm install
-    - run: npm run lint
-    - run: npm run test:all:coverage
-    - run: npm run e2e:uws
+      run: npm install
+      run: npm run lint
+      run: npm run test:all:coverage
+      run: npm run e2e:uws
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -83,19 +83,19 @@ jobs:
   macos:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v2
     - name: Checkout submodules
-    - run: git submodule update --init --recursive
+      uses: actions/checkout@v2
+      run: git submodule update --init --recursive
     - name: Use Node.js 
       env:
         DEFAULT_DELAY: 50
       uses: actions/setup-node@v1
       with:
         node-version: '12.x'
-    - run: npm install
-    - run: npm run lint
-    - run: npm run test:all:coverage
-    - run: npm run e2e:uws
+      run: npm install
+      run: npm run lint
+      run: npm run test:all:coverage
+      run: npm run e2e:uws
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -114,4 +114,3 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
         asset_path: build/*/*.pkg
-
