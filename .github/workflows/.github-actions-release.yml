@@ -47,9 +47,6 @@ jobs:
 
   windows:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        node-version: [14.x]
     steps:
     - uses: actions/checkout@v2
     - name: Checkout submodules
@@ -85,9 +82,6 @@ jobs:
 
   macos:
     runs-on: macos-latest
-    strategy:
-      matrix:
-        node-version: [14.x]
     steps:
     - uses: actions/checkout@v2
     - name: Checkout submodules
