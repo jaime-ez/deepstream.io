@@ -10,6 +10,8 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout reposistory
+      uses: actions/checkout@v2
     - name: Checkout submodules
       run: git submodule update --init --recursive
     - name: Use Node.js 
@@ -47,6 +49,8 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
+    - name: Checkout reposistory
+      uses: actions/checkout@v2
     - name: Checkout submodules
       run: git submodule update --init --recursive
     - name: Use Node.js 
@@ -81,6 +85,8 @@ jobs:
   macos:
     runs-on: macos-latest
     steps:
+    - name: Checkout reposistory
+      uses: actions/checkout@v2
     - name: Checkout submodules
       run: git submodule update --init --recursive
     - name: Use Node.js 
