@@ -19,7 +19,6 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: '12.x'
-        submodules: true
     - run: npm install
     - run: npm run lint
     - run: npm run test:all:coverage
@@ -50,16 +49,17 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        node-version: [12.x, 14x]
+        node-version: [14.x]
     steps:
     - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Checkout submodules
+    - run: git submodule update --init --recursive
+    - name: Use Node.js 
       env:
         DEFAULT_DELAY: 50
       uses: actions/setup-node@v1
       with:
-        node-version: ${{ matrix.node-version }}
-        submodules: true
+        node-version: '12.x'
     - run: npm install
     - run: npm run lint
     - run: npm run test:all:coverage
@@ -87,16 +87,17 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        node-version: [12.x, 14x]
+        node-version: [14.x]
     steps:
     - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Checkout submodules
+    - run: git submodule update --init --recursive
+    - name: Use Node.js 
       env:
         DEFAULT_DELAY: 50
       uses: actions/setup-node@v1
       with:
-        node-version: ${{ matrix.node-version }}
-        submodules: true
+        node-version: '12.x'
     - run: npm install
     - run: npm run lint
     - run: npm run test:all:coverage
