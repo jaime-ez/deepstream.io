@@ -18,12 +18,12 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: '12.x'
-      run: npm install
-      run: npm run lint
-      run: npm run test:all:coverage
-      run: npm run e2e:uws
-      run: bash ./scripts/package.sh true true
-      run: npm run tsc
+    - run: npm install
+    - run: npm run lint
+    - run: npm run test:all:coverage
+    - run: npm run e2e:uws
+    - run: bash ./scripts/package.sh true true
+    - run: npm run tsc
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -55,10 +55,10 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: '12.x'
-      run: npm install
-      run: npm run lint
-      run: npm run test:all:coverage
-      run: npm run e2e:uws
+    - run: npm install
+    - run: npm run lint
+    - run: npm run test:all:coverage
+    - run: npm run e2e:uws
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -89,10 +89,10 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: '12.x'
-      run: npm install
-      run: npm run lint
-      run: npm run test:all:coverage
-      run: npm run e2e:uws
+    - run: npm install
+    - run: npm run lint
+    - run: npm run test:all:coverage
+    - run: npm run e2e:uws
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
