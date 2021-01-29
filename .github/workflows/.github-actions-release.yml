@@ -20,6 +20,23 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
 
+  npm_publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    # Setup .npmrc file to publish to npm
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '12.x'
+        registry-url: 'https://registry.npmjs.org'
+    - run: npm install
+    - run: npm run lint
+    - run: npm run test
+    - run: npm run tsc
+    - run: npm publish --access public --tag canary
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
   linux:
     runs-on: ubuntu-latest
     steps:
@@ -30,17 +47,13 @@ jobs:
     - name: Use Node.js 
       env:
         DEFAULT_DELAY: 50
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       uses: actions/setup-node@v1
       with:
         node-version: '12.x'
-        registry-url: 'https://registry.npmjs.org'
     - run: npm install
     - run: npm run lint
     - run: npm run test
     - run: bash ./scripts/package.sh true true
-    - run: npm run tsc
-    - run: npm publish --access public --tag canary
     - name: Upload Release Asset
       uses: alexellis/upload-assets@0.2.2
       env:
