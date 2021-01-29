@@ -1,4 +1,4 @@
-`name: release
+name: release
 
 on:  
   push:
@@ -46,7 +46,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         asset_paths: '["build/*/*.tar.gz"]'
-
 
   windows:
     runs-on: windows-latest
