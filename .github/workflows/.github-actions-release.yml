@@ -46,7 +46,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         asset_paths: '["build/*/*.tar.gz"]'
-    - name: publish to NPM
 
 
   windows:
