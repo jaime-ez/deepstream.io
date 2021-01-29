@@ -42,7 +42,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        asset_paths: '["build/*/*.tar.gz"]'
+        asset_paths: '["build/*"]'
 
 
   windows:
@@ -67,7 +67,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        asset_paths: '["build/*/*.zip"]'
+        asset_paths: '["build/*"]'
 
   macos:
     runs-on: macos-latest
@@ -91,4 +91,4 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        asset_paths: '["build/*/*.pkg"]'
+        asset_paths: '["build/*"]'
