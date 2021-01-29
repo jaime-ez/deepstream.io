@@ -37,83 +37,77 @@ jobs:
         draft: false
         prerelease: false
     - name: Upload Release Asset
-      id: upload-release-asset 
-      uses: actions/upload-release-asset@v1
+      uses: alexellis/upload-assets@0.2.2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: build/*/*.tar.gz
+        asset_paths: '["build/*/*.tar.gz"]'
 
 
-  windows:
-    runs-on: windows-latest
-    steps:
-    - name: Checkout reposistory
-      uses: actions/checkout@v2
-    - name: Checkout submodules
-      run: git submodule update --init --recursive
-    - name: Use Node.js 
-      env:
-        DEFAULT_DELAY: 50
-      uses: actions/setup-node@v1
-      with:
-        node-version: '12.x'
-    - run: npm install
-    - run: npm run lint
-    - run: npm run test:all:coverage
-    - run: npm run e2e:uws
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
-    - name: Upload Release Asset
-      id: upload-release-asset 
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: build/*/*.zip
+  # windows:
+  #   runs-on: windows-latest
+  #   steps:
+  #   - name: Checkout reposistory
+  #     uses: actions/checkout@v2
+  #   - name: Checkout submodules
+  #     run: git submodule update --init --recursive
+  #   - name: Use Node.js 
+  #     env:
+  #       DEFAULT_DELAY: 50
+  #     uses: actions/setup-node@v1
+  #     with:
+  #       node-version: '12.x'
+  #   - run: npm install
+  #   - run: npm run lint
+  #   - run: npm run test:all:coverage
+  #   - run: npm run e2e:uws
+  #   - name: Create Release
+  #     id: create_release
+  #     uses: actions/create-release@v1
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     with:
+  #       tag_name: ${{ github.ref }}
+  #       release_name: Release ${{ github.ref }}
+  #       draft: false
+  #       prerelease: false
+  #   - name: Upload Release Asset
+  #     uses: alexellis/upload-assets@0.2.2
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     with:
+  #       asset_paths: '["build/*/*.zip"]'
 
-  macos:
-    runs-on: macos-latest
-    steps:
-    - name: Checkout reposistory
-      uses: actions/checkout@v2
-    - name: Checkout submodules
-      run: git submodule update --init --recursive
-    - name: Use Node.js 
-      env:
-        DEFAULT_DELAY: 50
-      uses: actions/setup-node@v1
-      with:
-        node-version: '12.x'
-    - run: npm install
-    - run: npm run lint
-    - run: npm run test:all:coverage
-    - run: npm run e2e:uws
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
-    - name: Upload Release Asset
-      id: upload-release-asset 
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: build/*/*.pkg
+  # macos:
+  #   runs-on: macos-latest
+  #   steps:
+  #   - name: Checkout reposistory
+  #     uses: actions/checkout@v2
+  #   - name: Checkout submodules
+  #     run: git submodule update --init --recursive
+  #   - name: Use Node.js 
+  #     env:
+  #       DEFAULT_DELAY: 50
+  #     uses: actions/setup-node@v1
+  #     with:
+  #       node-version: '12.x'
+  #   - run: npm install
+  #   - run: npm run lint
+  #   - run: npm run test:all:coverage
+  #   - run: npm run e2e:uws
+  #   - name: Create Release
+  #     id: create_release
+  #     uses: actions/create-release@v1
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     with:
+  #       tag_name: ${{ github.ref }}
+  #       release_name: Release ${{ github.ref }}
+  #       draft: false
+  #       prerelease: false
+  #   - name: Upload Release Asset
+  #     uses: alexellis/upload-assets@0.2.2
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     with:
+  #       asset_paths: '["build/*/*.pkg"]'
