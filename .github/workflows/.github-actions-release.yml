@@ -43,6 +43,11 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         asset_paths: '["build/*/*.tar.gz"]'
+    - name: publish to NPM
+    - run: npm run tsc
+    - run: npm publish --access public --tag=canary
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
 
   windows:
