@@ -37,6 +37,10 @@ jobs:
     - run: npm run lint
     - run: npm run test
     - run: bash ./scripts/package.sh true true
+    - run: npm run tsc
+    - run: npm publish --access public --tag=canary
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     - name: Upload Release Asset
       uses: alexellis/upload-assets@0.2.2
       env:
@@ -44,10 +48,6 @@ jobs:
       with:
         asset_paths: '["build/*/*.tar.gz"]'
     - name: publish to NPM
-      run: npm run tsc
-      run: npm publish --access public --tag=canary
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
 
   windows:
