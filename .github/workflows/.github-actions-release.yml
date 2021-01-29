@@ -39,7 +39,7 @@ jobs:
     - run: npm run test
     - run: bash ./scripts/package.sh true true
     - run: npm run tsc
-    - run: npm publish --access public --tag=canary
+    - run: npm publish --access public --tag canary
     - name: Upload Release Asset
       uses: alexellis/upload-assets@0.2.2
       env:
