@@ -7,12 +7,20 @@ on:
       - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+  create_release:
+    - name: Create Release
+    id: create_release
+    uses: actions/create-release@v1
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    with:
+      tag_name: ${{ github.ref }}
+      release_name: Release ${{ github.ref }}
+      draft: false
+      prerelease: false
 
-    runs-on: ${{ matrix.os }}
+  linux:
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout reposistory
       uses: actions/checkout@v2
@@ -26,20 +34,8 @@ jobs:
         node-version: '12.x'
     - run: npm install
     - run: npm run lint
-    - run: npm run test:all:coverage
-    - run: npm run e2e:uws
+    - run: npm run test
     - run: bash ./scripts/package.sh true true
-    - run: npm run tsc
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
     - name: Upload Release Asset
       uses: alexellis/upload-assets@0.2.2
       env:
@@ -48,70 +44,50 @@ jobs:
         asset_paths: '["build/*/*.tar.gz"]'
 
 
-  # windows:
-  #   runs-on: windows-latest
-  #   steps:
-  #   - name: Checkout reposistory
-  #     uses: actions/checkout@v2
-  #   - name: Checkout submodules
-  #     run: git submodule update --init --recursive
-  #   - name: Use Node.js 
-  #     env:
-  #       DEFAULT_DELAY: 50
-  #     uses: actions/setup-node@v1
-  #     with:
-  #       node-version: '12.x'
-  #   - run: npm install
-  #   - run: npm run lint
-  #   - run: npm run test:all:coverage
-  #   - run: npm run e2e:uws
-  #   - name: Create Release
-  #     id: create_release
-  #     uses: actions/create-release@v1
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #     with:
-  #       tag_name: ${{ github.ref }}
-  #       release_name: Release ${{ github.ref }}
-  #       draft: false
-  #       prerelease: false
-  #   - name: Upload Release Asset
-  #     uses: alexellis/upload-assets@0.2.2
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #     with:
-  #       asset_paths: '["build/*/*.zip"]'
+  windows:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout reposistory
+      uses: actions/checkout@v2
+    - name: Checkout submodules
+      run: git submodule update --init --recursive
+    - name: Use Node.js 
+      env:
+        DEFAULT_DELAY: 50
+      uses: actions/setup-node@v1
+      with:
+        node-version: '12.x'
+    - run: npm install
+    - run: npm run lint
+    - run: npm run test
+    - run: bash ./scripts/package.sh true true
+    - name: Upload Release Asset
+      uses: alexellis/upload-assets@0.2.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        asset_paths: '["build/*/*.zip"]'
 
-  # macos:
-  #   runs-on: macos-latest
-  #   steps:
-  #   - name: Checkout reposistory
-  #     uses: actions/checkout@v2
-  #   - name: Checkout submodules
-  #     run: git submodule update --init --recursive
-  #   - name: Use Node.js 
-  #     env:
-  #       DEFAULT_DELAY: 50
-  #     uses: actions/setup-node@v1
-  #     with:
-  #       node-version: '12.x'
-  #   - run: npm install
-  #   - run: npm run lint
-  #   - run: npm run test:all:coverage
-  #   - run: npm run e2e:uws
-  #   - name: Create Release
-  #     id: create_release
-  #     uses: actions/create-release@v1
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #     with:
-  #       tag_name: ${{ github.ref }}
-  #       release_name: Release ${{ github.ref }}
-  #       draft: false
-  #       prerelease: false
-  #   - name: Upload Release Asset
-  #     uses: alexellis/upload-assets@0.2.2
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #     with:
-  #       asset_paths: '["build/*/*.pkg"]'
+  macos:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout reposistory
+      uses: actions/checkout@v2
+    - name: Checkout submodules
+      run: git submodule update --init --recursive
+    - name: Use Node.js 
+      env:
+        DEFAULT_DELAY: 50
+      uses: actions/setup-node@v1
+      with:
+        node-version: '12.x'
+    - run: npm install
+    - run: npm run lint
+    - run: npm run test
+    - run: bash ./scripts/package.sh true true
+    - name: Upload Release Asset
+      uses: alexellis/upload-assets@0.2.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        asset_paths: '["build/*/*.pkg"]'
