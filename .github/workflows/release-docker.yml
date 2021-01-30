@@ -23,21 +23,19 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push
-        runs-on: ubuntu-latest
-        steps:
-        - uses: actions/checkout@v2
-        - uses: actions/setup-node@v1
-          with:
-            node-version: '12.x'
-        - run: npm install
-        - run: npm run lint
-        - run: npm run test
-        - run: npm run tsc
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+      - run: npm install
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run tsc
 
-        - uses: docker/build-push-action@v2
-        - with:
-            context: ./dist/
-            file: ./Dockerfile
-            platforms: linux/amd64,linux/arm64,linux/386
-            push: true
-            tags: jaimeez/jaimeez.io:latest, jaimeez/jaimeez.io:${{github.ref}}
+      - uses: docker/build-push-action@v2
+      - with:
+          context: ./dist/
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/386
+          push: true
+          tags: jaimeez/jaimeez.io:latest, jaimeez/jaimeez.io:${{github.ref}}
