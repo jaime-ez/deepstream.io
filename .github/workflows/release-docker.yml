@@ -1,0 +1,47 @@
+name: release-docker
+
+on:  
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+jobs:
+  path-context:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Build and push
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v2
+        - uses: actions/setup-node@v1
+          with:
+            node-version: '12.x'
+        - run: npm install
+        - run: npm run lint
+        - run: npm run test
+        - run: npm run tsc
+
+        - uses: docker/build-push-action@v2
+        - with:
+            context: ./dist/
+            file: ./Dockerfile
+            platforms: linux/amd64,linux/arm64,linux/386
+            push: true
+            tags: jaimeez/jaimeez.io:latest, jaimeez/jaimeez.io:${{github.ref}}
