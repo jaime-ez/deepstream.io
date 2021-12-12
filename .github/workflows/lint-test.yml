@@ -19,7 +19,7 @@ jobs:
     - run: npm run test:all:coverage
     - run: npm run e2e:uws
     - name: Coveralls
-      if: startsWith(matrix.node-version, '16.')
+      if: startsWith(matrix.node-version, '14.')
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
