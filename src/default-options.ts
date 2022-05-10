@@ -55,8 +55,6 @@ export function get (): DeepstreamConfig {
         type: 'http',
         options: {
           allowAuthData: true,
-          enableAuthEndpoint: true,
-          authPath: '/api/auth',
           postPath: '/api',
           getPath: '/api'
         }

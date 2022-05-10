@@ -4,14 +4,11 @@ import * as HTTPStatus from 'http-status'
 import { PARSER_ACTION, AUTH_ACTION, EVENT_ACTION, RECORD_ACTION, Message, ALL_ACTIONS, JSONObject } from '../../constants'
 import { DeepstreamConnectionEndpoint, DeepstreamServices, SimpleSocketWrapper, SocketWrapper, JifResult, UnauthenticatedSocketWrapper, DeepstreamPlugin, DeepstreamConfig, EVENT, DeepstreamHTTPResponse, DeepstreamHTTPMeta, DeepstreamAuthenticationResult } from '@deepstream/types'
 export interface HTTPEvents {
-  onAuthMessage: Function
   onPostMessage: Function
   onGetMessage: Function
 }
 
 interface HTTPConnectionEndpointOptionsInterface {
-  enableAuthEndpoint: boolean,
-  authPath: string,
   postPath: string,
   getPath: string,
   allowAuthData: boolean,
@@ -37,8 +34,6 @@ export class HTTPConnectionEndpoint extends DeepstreamPlugin implements Deepstre
   constructor (private pluginOptions: HTTPConnectionEndpointOptionsInterface, private services: DeepstreamServices, public dsOptions: DeepstreamConfig) {
     super()
 
-    checkConfigOption(pluginOptions, 'enableAuthEndpoint', 'boolean')
-    checkConfigOption(pluginOptions, 'authPath', 'string')
     checkConfigOption(pluginOptions, 'postPath', 'string')
     checkConfigOption(pluginOptions, 'getPath', 'string')
 
@@ -69,9 +64,6 @@ export class HTTPConnectionEndpoint extends DeepstreamPlugin implements Deepstre
     }
     this.initialized = true
 
-    if (this.pluginOptions.enableAuthEndpoint) {
-      this.services.httpService.registerPostPathPrefix(this.pluginOptions.authPath, this.onAuthMessage.bind(this))
-    }
     this.services.httpService.registerPostPathPrefix(this.pluginOptions.postPath, this.onPostMessage.bind(this))
     this.services.httpService.registerGetPathPrefix(this.pluginOptions.getPath, this.onGetMessage.bind(this))
 
@@ -97,42 +89,6 @@ export class HTTPConnectionEndpoint extends DeepstreamPlugin implements Deepstre
     this.services.logger.warn(RECORD_ACTION[RECORD_ACTION.READ], message)
     responseCallback({ statusCode: 400, message })
     // TODO: implement a GET endpoint that reads the current state of a record
-  }
-
-  /**
-   * Handle a message to the authentication endpoint (for token generation).
-   *
-   * Passes the entire message to the configured authentication handler.
-   */
-  private onAuthMessage (authData: JSONObject, metadata: DeepstreamHTTPMeta, responseCallback: DeepstreamHTTPResponse): void {
-    this.services.authentication.isValidUser(
-      metadata,
-      authData,
-      (isAllowed, data) => {
-        this.services.monitoring.onLogin(isAllowed, 'http')
-
-        if (isAllowed === true) {
-          responseCallback(null, {
-            token: data!.token,
-            clientData: data!.clientData
-          })
-          return
-        }
-
-        let error = typeof data === 'string' ? data : 'Invalid authentication data.'
-
-        responseCallback({
-          statusCode: HTTPStatus.UNAUTHORIZED,
-          message: error
-        })
-
-        if (this.logInvalidAuthData === true) {
-          error += `: ${JSON.stringify(authData)}`
-        }
-
-        this.services.logger.debug(AUTH_ACTION[AUTH_ACTION.AUTH_UNSUCCESSFUL], error)
-      }
-    )
   }
 
   /**

@@ -175,8 +175,6 @@ const connEndpointsOptions = {
 
               // HTTP
               allowAuthData: { type: 'boolean' },
-              enableAuthEndpoint: { type: 'boolean' },
-              authPath: { type: 'string', minLength: 1 },
               postPath: { type: 'string', minLength: 1 },
               getPath: { type: 'string', minLength: 1 },
           }

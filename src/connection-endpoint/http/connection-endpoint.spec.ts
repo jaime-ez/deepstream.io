@@ -9,10 +9,8 @@ import { NodeHTTP } from '../../services/http/node/node-http'
 import { HTTPConnectionEndpoint } from './connection-endpoint';
 
 const conf = {
-  authPath: '/api/v1/auth',
   postPath: '/api/v1',
   getPath: '/api/v1',
-  enableAuthEndpoint: true,
   requestTimeout: 30,
   allowAuthData: true
 }
