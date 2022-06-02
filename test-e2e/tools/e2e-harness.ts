@@ -37,10 +37,6 @@ export class E2EHarness extends EventEmitter {
     return `localhost:${this.ports[serverId - 1]}/api`
   }
 
-  public getAuthUrl (serverId: number) {
-    return `localhost:${this.ports[serverId - 1]}/api/auth`
-  }
-
   public async updateStorageDirectly (recordName: string, version: number, data: JSONValue) {
     this.servers.forEach((server) => {
       server.getServices().storage.set(recordName, version, data, () => {})

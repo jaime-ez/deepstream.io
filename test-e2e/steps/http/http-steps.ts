@@ -9,12 +9,8 @@ let httpClients: { [index: string]: any } = {}
 
 Given(/^(.+) authenticates? with http server (\d+)$/, (clientExpression: string, server, done) => {
   clientHandler.getClientNames(clientExpression).forEach((clientName: string) => {
-    let serverUrl
-    if (global.e2eHarness.getAuthUrl) {
-      serverUrl = global.e2eHarness.getAuthUrl(server)
-    } else {
-      serverUrl = global.e2eHarness.getHttpUrl(server)
-    }
+    const serverUrl = global.e2eHarness.getHttpUrl(server)
+
     const message = {
       username: clientName,
       password: 'abcdefgh'
@@ -38,12 +34,7 @@ Given(/^(.+) authenticates? with http server (\d+)$/, (clientExpression: string,
 
 Given(/^(.+) authenticates? with http server (\d+) with details ("[^"]*"|\d+|{.*})?$/, (clientExpression: string, server, data, done) => {
   clientHandler.getClientNames(clientExpression).forEach((clientName: string) => {
-    let serverUrl
-    if (global.e2eHarness.getAuthUrl) {
-      serverUrl = global.e2eHarness.getAuthUrl(server - 1, clientName)
-    } else {
-      serverUrl = global.e2eHarness.getHttpUrl(server - 1, clientName)
-    }
+    const serverUrl = global.e2eHarness.getHttpUrl(server - 1, clientName)
     const credentials = JSON.parse(data)
     needle.post(serverUrl, credentials, { json: true }, (err, response) => {
       process.nextTick(done)
