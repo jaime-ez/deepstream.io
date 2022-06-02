@@ -6,7 +6,7 @@ import { StdOutLogger } from './std-out-logger'
 import { LOG_LEVEL, EVENT } from '@deepstream/types';
 
 describe('logs to stdout and stderr', () => {
-  const logger = new StdOutLogger({ color: false })
+  const logger = new StdOutLogger({ color: false }, undefined, { logLevel: LOG_LEVEL.DEBUG })
   const originalStdOut = process.stdout
   const originalStdErr = process.stderr
   const stdout = spy()
