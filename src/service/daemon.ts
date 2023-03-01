@@ -1,5 +1,6 @@
 // Handle input parameters
 import { spawn, ChildProcess } from 'child_process'
+import {bin} from '../../package.json'
 
 const maxMilliseconds = 5000
 
@@ -59,9 +60,9 @@ function _start (options: any) {
     starts += 1
 
     // Fork the child process piping stdin/out/err to the parent
-    // NOTE: ADDING process.argv[1] as first arg to the spawned process is a workaround to fix a pkg bug
+    // NOTE: ADDING pkg entrypoint as first arg to the spawned process is a workaround to fix a pkg bug
     // https://github.com/vercel/pkg/issues/1356
-    child = spawn(options.processExec, [process.argv[1], 'start'].concat(process.argv.slice(2)), {
+    child = spawn(options.processExec, [bin.deepstream, 'start'].concat(process.argv.slice(2)), {
       env: process.env
     })
 
