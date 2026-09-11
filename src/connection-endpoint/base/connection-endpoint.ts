@@ -193,7 +193,18 @@ export default class BaseWebsocketConnectionEndpoint extends DeepstreamPlugin im
         if (!this.clientVersions[msg.sdkType]) {
           this.clientVersions[msg.sdkType] = new Set()
         }
-        this.clientVersions[msg.sdkType].add(msg.sdkVersion)
+        try {
+          this.clientVersions[msg.sdkType].add(msg.sdkVersion)
+        } catch (error) {
+          this.services.logger!.warn(CONNECTION_ACTION[CONNECTION_ACTION.INVALID_MESSAGE], 'invalid connection message')
+          socketWrapper.sendMessage({
+            topic: TOPIC.CONNECTION,
+            action: CONNECTION_ACTION.INVALID_MESSAGE,
+            originalTopic: msg.topic,
+            originalAction: msg.action
+          }, false)
+          return
+        }
       }
       socketWrapper.onMessage = socketWrapper.authCallback!
       socketWrapper.sendMessage({
